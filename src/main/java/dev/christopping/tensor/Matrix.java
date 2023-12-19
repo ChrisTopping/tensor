@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-// TODO: test
-// TODO: add javadocs
 public class Matrix<T> extends Tensor<T> {
 
     protected Matrix() {

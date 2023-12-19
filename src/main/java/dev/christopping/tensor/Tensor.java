@@ -8,10 +8,6 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-// TODO: add javadocs
-// TODO: creational pattern for instatiation of general matrix
-// TODO: create Vector class
-
 /**
  * Generic multi dimensional sparse tensor implementation
  *
@@ -28,8 +24,6 @@ public class Tensor<T> {
     protected Tensor(Map<Key, T> map) {
         this.map = new HashMap<>(map);
     }
-
-    // TODO: static factory method that accepts arrays of dynamic order
 
     // TODO: test
     public static <T> Tensor<T> fill(T value, long... dimensions) {
@@ -144,8 +138,6 @@ public class Tensor<T> {
         return new Tensor<>(map);
     }
 
-    // TODO: reduce()
-
     public boolean isEmpty() {
         return map.isEmpty();
     }
@@ -196,7 +188,6 @@ public class Tensor<T> {
         return toString(" ");
     }
 
-    // TODO: remove Objects.equal()?
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

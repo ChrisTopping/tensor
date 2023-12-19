@@ -4,8 +4,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-// TODO: rename?
-// TODO: add javadocs
 public record Key(List<Long> coordinates) implements Comparable<Key> {
 
     public static Key of(List<Long> coordinates) {
@@ -74,8 +72,6 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
 
         return Math.sqrt(sumOfSquareOfDifferences);
     }
-
-    // TODO: add [minkowski distance, manhattan distance, hamming distance, chebyshev distance] once I understand them
 
     /**
      * Calculates the number of orthogonal dimensions by which the two keys disagree
