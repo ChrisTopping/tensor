@@ -1,7 +1,5 @@
 package dev.christopping.tensor;
 
-import com.google.common.base.Objects;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -182,7 +180,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(new ArrayList<>(coordinates));
+        return coordinates.hashCode();
     }
 
     @Override

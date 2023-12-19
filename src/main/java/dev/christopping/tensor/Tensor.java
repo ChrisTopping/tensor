@@ -1,7 +1,5 @@
 package dev.christopping.tensor;
 
-import com.google.common.base.Objects;
-
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -15,7 +13,7 @@ import java.util.stream.Stream;
 // TODO: create Vector class
 
 /**
- * Generic multi dimensional sparse matrix implementation
+ * Generic multi dimensional sparse tensor implementation
  *
  * @param <T> matrix value type
  */
@@ -28,8 +26,10 @@ public class Tensor<T> {
     }
 
     protected Tensor(Map<Key, T> map) {
-        this.map = map;
+        this.map = new HashMap<>(map);
     }
+
+    // TODO: static factory method that accepts arrays of dynamic order
 
     // TODO: test
     public static <T> Tensor<T> fill(T value, long... dimensions) {
@@ -163,7 +163,8 @@ public class Tensor<T> {
     }
 
     public Matrix<T> toMatrix2D() {
-        if (order() != 2) throw new IllegalStateException("dev.christopping.tensor.Matrix must be of order 2 to be converted to Matrix2D");
+        if (order() != 2)
+            throw new IllegalStateException("dev.christopping.tensor.Matrix must be of order 2 to be converted to Matrix2D");
         return new Matrix<>(map);
     }
 
@@ -184,7 +185,7 @@ public class Tensor<T> {
                 }
             }
             T element = map.get(current);
-            builder.append(" ").append(element == null ? defaultValue: element);
+            builder.append(" ").append(element == null ? defaultValue : element);
             previous = current;
         }
         return builder.toString().trim();
@@ -202,11 +203,11 @@ public class Tensor<T> {
         if (o == null || getClass() != o.getClass()) return false;
         Tensor<?> tensor = (Tensor<?>) o;
 
-        return Objects.equal(map, tensor.map);
+        return map == tensor.map || (map.equals(tensor.map));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(map);
+        return map.hashCode();
     }
 }
