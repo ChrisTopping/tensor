@@ -9,6 +9,7 @@ Tensor package for Java
 - [x] Test all Tensor.java methods
 - [x] Create Vector class
 - [x] Create Scalar class
+- [x] Tensor generator factory method
 - [ ] Add GHA workflow for mvn publish
 - [ ] Add javadocs to all public methods
 - [ ] Test all Matrix.java methods

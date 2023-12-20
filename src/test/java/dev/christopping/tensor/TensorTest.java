@@ -41,9 +41,64 @@ class TensorTest {
         return tensor;
     }
 
+    @DisplayName("empty()")
+    @Nested
+    class Empty {
+
+        @DisplayName("Should create empty tensor")
+        @Test
+        void shouldCreateEmptyTensor() {
+            Tensor<String> tensor = Tensor.empty();
+            assertThat(tensor.order()).isEqualTo(0);
+            assertThat(tensor.dimensions()).isEmpty();
+            assertThat(tensor.get()).isNull();
+        }
+
+    }
+
+    @DisplayName("fill(T value, Index index)")
+    @Nested
+    class FillByIndex {
+
+        @DisplayName("Given negative vararg - should throw error")
+        @Test
+        void givenNegativeVararg_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", Index.of(-1L))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given 1 vararg - should return tensor with vector value")
+        @Test
+        void given1Vararg_shouldReturnTensorWithVectorValue() {
+            Tensor<String> tensor = Tensor.fill("123", Index.of(2L));
+            assertThat(tensor.order()).isEqualTo(1);
+            assertThat(tensor.dimensions()).containsExactly(3L);
+            assertTensor(tensor, "123 123 123");
+        }
+
+        @DisplayName("Given 2 varargs - should return tensor with matrix value")
+        @Test
+        void given2Varargs_shouldReturnTensorWithMatrixValue() {
+            Tensor<String> tensor = Tensor.fill("123", Index.of(2L, 2L));
+            assertThat(tensor.order()).isEqualTo(2);
+            assertThat(tensor.dimensions()).containsExactly(3L, 3L);
+            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123");
+        }
+
+        @DisplayName("Given 3 varargs - should return tensor with 3D value")
+        @Test
+        void given3Varargs_shouldReturnTensorWith3DValue() {
+            Tensor<String> tensor = Tensor.fill("123", Index.of(2L, 2L, 1L));
+            assertThat(tensor.order()).isEqualTo(3);
+            assertThat(tensor.dimensions()).containsExactly(3L, 3L, 2L);
+            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123 || 123 123 123 | 123 123 123 | 123 123 123");
+        }
+
+    }
+
     @DisplayName("fill(T value, long... dimensions)")
     @Nested
-    class FillLongVarargs {
+    class FillByLongVarargs {
+
         @DisplayName("Given empty varargs - should return tensor with scalar value")
         @Test
         void givenEmptyVarargs_shouldReturnTensorWithScalarValue() {
@@ -96,7 +151,7 @@ class TensorTest {
 
     @DisplayName("fill(T value, int... dimensions")
     @Nested
-    class FillIntVarargs {
+    class FillByIntVarargs {
 
         @DisplayName("Given negative vararg - should throw error")
         @Test
@@ -139,24 +194,175 @@ class TensorTest {
 
     }
 
-    @DisplayName("empty()")
+    @DisplayName("generate(Function<Index, T> generator, int... dimensions)")
     @Nested
-    class Empty {
+    class GenerateByIndex {
 
-        @DisplayName("Should create empty tensor")
+        @DisplayName("Given null generator function - should throw error")
         @Test
-        void shouldCreateEmptyTensor() {
-            Tensor<String> tensor = Tensor.empty();
-            assertThat(tensor.order()).isEqualTo(0);
-            assertThat(tensor.dimensions()).isEmpty();
-            assertThat(tensor.get()).isNull();
+        void givenNullGeneratorFunction_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.generate(null, Index.of(1, 2, 3))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given 1 dimension - should return vector")
+        @Test
+        void given1Dimension_shouldReturnScalar() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, Index.of(2));
+            assertTensor(tensor, "(0) (1) (2)");
+        }
+
+        @DisplayName("Given 2 dimensions - should return matrix")
+        @Test
+        void given2Dimensions_shouldReturnMatrix() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, Index.of(1, 1));
+            assertTensor(tensor, "(0, 0) (1, 0) | (0, 1) (1, 1)");
+        }
+
+        @DisplayName("Given 3 dimensions - should return 3-tensor")
+        @Test
+        void given3Dimensions_shouldReturn3Tensor() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, Index.of(1, 1, 1));
+            assertTensor(tensor, "(0, 0, 0) (1, 0, 0) | (0, 1, 0) (1, 1, 0) || (0, 0, 1) (1, 0, 1) | (0, 1, 1) (1, 1, 1)");
         }
 
     }
 
-    @DisplayName("get(int x, int y)")
+    @DisplayName("generate(Function<Index, T> generator, long... dimensions)")
     @Nested
-    class Get {
+    class GenerateByLongVarargs {
+
+        @DisplayName("Given null generator function - should throw error")
+        @Test
+        void givenNullGeneratorFunction_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.generate(null, 1L, 2L, 3L)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given empty dimensions - should return scalar")
+        @Test
+        void givenEmptyDimensions_shouldReturnScalar() {
+            Tensor<Object> tensor = Tensor.generate(index -> "abc");
+            assertThat(tensor.isEmpty()).isFalse();
+            assertTensor(tensor, "abc");
+        }
+
+        @DisplayName("Given 1 dimension - should return vector")
+        @Test
+        void given1Dimension_shouldReturnVector() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, 3L);
+            assertTensor(tensor, "(0) (1) (2)");
+        }
+
+        @DisplayName("Given 2 dimensions - should return matrix")
+        @Test
+        void given2Dimensions_shouldReturnMatrix() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, 2L, 2L);
+            assertTensor(tensor, "(0, 0) (1, 0) | (0, 1) (1, 1)");
+        }
+
+        @DisplayName("Given 3 dimensions - should return 3-tensor")
+        @Test
+        void given3Dimensions_shouldReturn3Tensor() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, 2L, 2L, 2L);
+            assertTensor(tensor, "(0, 0, 0) (1, 0, 0) | (0, 1, 0) (1, 1, 0) || (0, 0, 1) (1, 0, 1) | (0, 1, 1) (1, 1, 1)");
+        }
+
+    }
+
+    @DisplayName("generate(Function<Index, T> generator, int... dimensions)")
+    @Nested
+    class GenerateByIntVarargs {
+
+        @DisplayName("Given null generator function - should throw error")
+        @Test
+        void givenNullGeneratorFunction_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.generate(null, 1, 2, 3)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given 1 dimension - should return vector")
+        @Test
+        void given1Dimension_shouldReturnScalar() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, 3);
+            assertTensor(tensor, "(0) (1) (2)");
+        }
+
+        @DisplayName("Given 2 dimensions - should return matrix")
+        @Test
+        void given2Dimensions_shouldReturnMatrix() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, 2, 2);
+            assertTensor(tensor, "(0, 0) (1, 0) | (0, 1) (1, 1)");
+        }
+
+        @DisplayName("Given 3 dimensions - should return 3-tensor")
+        @Test
+        void given3Dimensions_shouldReturn3Tensor() {
+            Tensor<String> tensor = Tensor.generate(Index::toString, 2, 2, 2);
+            assertTensor(tensor, "(0, 0, 0) (1, 0, 0) | (0, 1, 0) (1, 1, 0) || (0, 0, 1) (1, 0, 1) | (0, 1, 1) (1, 1, 1)");
+        }
+
+    }
+
+    @DisplayName("get(Index index)")
+    @Nested
+    class GetByIndex {
+
+        @DisplayName("Given null - return null")
+        @Test
+        void givenNull_doSomething() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+            assertThat(tensor.get()).isNull();
+        }
+
+        @DisplayName("Given mapping exists - should return value")
+        @Test
+        void givenMappingExists_shouldReturnValue() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+
+            assertThat(tensor.get(Index.of(0, 0))).isEqualTo(1);
+            assertThat(tensor.get(Index.of(1, 0))).isEqualTo(2);
+            assertThat(tensor.get(Index.of(0, 1))).isEqualTo(3);
+            assertThat(tensor.get(Index.of(1, 1))).isEqualTo(4);
+            assertThat(tensor.get(Index.of(0, 2))).isEqualTo(5);
+            assertThat(tensor.get(Index.of(1, 2))).isEqualTo(6);
+        }
+
+        @DisplayName("Given mapping does not exist - should throw exception")
+        @Test
+        void givenMappingDoesNotExist_shouldReturnNull() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+            assertThat(tensor.get(Index.of(2, 0))).isNull();
+        }
+
+    }
+
+    @DisplayName("get(long... coordinates")
+    @Nested
+    class GetByLongVarargs {
+
+        @DisplayName("Given mapping exists - should return value")
+        @Test
+        void givenMappingExists_shouldReturnValue() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+
+            assertThat(tensor.get(0L, 0L)).isEqualTo(1);
+            assertThat(tensor.get(1L, 0L)).isEqualTo(2);
+            assertThat(tensor.get(0L, 1L)).isEqualTo(3);
+            assertThat(tensor.get(1L, 1L)).isEqualTo(4);
+            assertThat(tensor.get(0L, 2L)).isEqualTo(5);
+            assertThat(tensor.get(1L, 2L)).isEqualTo(6);
+        }
+
+        @DisplayName("Given mapping does not exist - should throw exception")
+        @Test
+        void givenMappingDoesNotExist_shouldReturnNull() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+            assertThat(tensor.get(2L, 0L)).isNull();
+        }
+
+    }
+
+    @DisplayName("get(int... coordinates)")
+    @Nested
+    class GetByIntVarargs {
 
         @DisplayName("Given mapping exists - should return value")
         @Test
@@ -180,9 +386,93 @@ class TensorTest {
 
     }
 
-    @DisplayName("set(int x, int y, T value)")
+    @DisplayName("set(T value, Index index)")
     @Nested
-    class Set {
+    class SetByIndex {
+
+        @DisplayName("Given order of coordinates less than order of tensor - should throw error")
+        @Test
+        void givenOrderOfCoordinatesLessThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> build(INT_ARRAY_3D).set(1, Index.of(1, 2))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given order of coordinates greater than order of tensor")
+        @Test
+        void givenOrderOfCoordinatesGreaterThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> build(INT_ARRAY_3D).set(1, Index.of(1, 2, 3, 4))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given unmapped coordinates - should set new value")
+        @Test
+        void givenUnmappedCoordinates_shouldSetNewValue() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+
+            assertThat(tensor.get(2L, 0L)).isNull();
+
+            tensor.set(100, Index.of(2, 0));
+
+            assertThat(tensor.get(2L, 0L)).isEqualTo(100);
+        }
+
+        @DisplayName("Given mapped coordinates - should replace value")
+        @Test
+        void givenMappedCoordinates_shouldReplaceValue() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(2);
+
+            tensor.set(100, Index.of(1, 0));
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(100);
+        }
+
+    }
+
+    @DisplayName("set(T value, long... coordinates)")
+    @Nested
+    class SetByLongVarargs {
+
+        @DisplayName("Given order of coordinates less than order of tensor - should throw error")
+        @Test
+        void givenOrderOfCoordinatesLessThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> build(INT_ARRAY_3D).set(1, 1L, 2L)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given order of coordinates greater than order of tensor")
+        @Test
+        void givenOrderOfCoordinatesGreaterThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> build(INT_ARRAY_3D).set(1, 1L, 2L, 3L, 4L)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given unmapped coordinates - should set new value")
+        @Test
+        void givenUnmappedCoordinates_shouldSetNewValue() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+
+            assertThat(tensor.get(2L, 0L)).isNull();
+
+            tensor.set(100, 2L, 0L);
+
+            assertThat(tensor.get(2L, 0L)).isEqualTo(100);
+        }
+
+        @DisplayName("Given mapped coordinates - should replace value")
+        @Test
+        void givenMappedCoordinates_shouldReplaceValue() {
+            Tensor<Integer> tensor = build(INT_ARRAY_2D);
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(2);
+
+            tensor.set(100, 1L, 0L);
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(100);
+        }
+
+    }
+
+    @DisplayName("set(T value, int... coordinates)")
+    @Nested
+    class SetByIntVarargs {
 
         @DisplayName("Given order of coordinates less than order of tensor - should throw error")
         @Test

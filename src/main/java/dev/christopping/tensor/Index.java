@@ -1,23 +1,45 @@
 package dev.christopping.tensor;
 
 import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 public record Index(List<Long> coordinates) implements Comparable<Index> {
 
     public static Index of(List<Long> coordinates) {
         if (coordinates.stream().anyMatch(coordinate -> coordinate < 0))
             throw new IllegalArgumentException("Coordinates cannot be negative");
-        return new Index(coordinates);
+        return new Index(new ArrayList<>(coordinates));
     }
 
     public static Index of(long... coordinates) {
-        return new Index(new ArrayList<>(Arrays.stream(coordinates).boxed().toList()));
+        return of(Arrays.stream(coordinates).boxed().toList());
     }
 
     public static Index of(int... coordinates) {
-        return new Index(new ArrayList<>(Arrays.stream(coordinates).mapToLong(value -> value).boxed().toList()));
+        return of(Arrays.stream(coordinates).mapToLong(Long::valueOf).boxed().toList());
+    }
+
+    public static List<Index> indices(Index maxIndex) {
+        if (maxIndex.isEmpty()) return new ArrayList<>();
+        int order = maxIndex.order();
+
+        BinaryOperator<List<Index>> combinationFunction = (first, second) ->
+                first.stream()
+                        .map(firstIndex -> second.stream().map(firstIndex::combine)).map(Stream::toList)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+
+        return IntStream.range(0, order)
+                .mapToLong(maxIndex::get)
+                .map(coordinate -> coordinate + 1)
+                .mapToObj(size -> LongStream.range(0, size).mapToObj(Index::of).collect(Collectors.toList()))
+                .reduce(combinationFunction)
+                .orElse(new ArrayList<>());
     }
 
     /**
@@ -104,6 +126,10 @@ public record Index(List<Long> coordinates) implements Comparable<Index> {
                 .orElse(0);
     }
 
+    public boolean isEmpty() {
+        return coordinates.isEmpty();
+    }
+
     /**
      * Determines whether indices have same dimensionality
      *
@@ -150,6 +176,11 @@ public record Index(List<Long> coordinates) implements Comparable<Index> {
         ArrayList<Long> newCoordinates = new ArrayList<>(coordinates);
         newCoordinates.addAll(other.coordinates);
         return Index.of(newCoordinates);
+    }
+
+    public Index compute(Function<Long, Long> computeFunction) {
+        List<Long> computedCoordinates = coordinates.stream().map(computeFunction).collect(Collectors.toList());
+        return Index.of(computedCoordinates);
     }
 
     @Override

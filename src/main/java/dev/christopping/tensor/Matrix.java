@@ -77,18 +77,17 @@ public class Matrix<T> extends Tensor<T> {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public int order() {
+        return 2;
+    }
+
     public long width() {
-        return map.keySet().stream()
-                .mapToLong(index -> index.coordinates().get(0))
-                .max()
-                .orElse(-1) + 1;
+        return size(0);
     }
 
     public long height() {
-        return map.keySet().stream()
-                .mapToLong(index -> index.coordinates().get(1))
-                .max()
-                .orElse(-1) + 1;
+        return size(1);
     }
 
     public List<List<T>> toNestedList() {
@@ -147,8 +146,8 @@ public class Matrix<T> extends Tensor<T> {
 
     public String toFormattedString() {
         StringBuilder builder = new StringBuilder();
-        long width = size(0);
-        long height = size(1);
+        long width = width();
+        long height = height();
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 T value = map.getOrDefault(Index.of(x, y), null);
