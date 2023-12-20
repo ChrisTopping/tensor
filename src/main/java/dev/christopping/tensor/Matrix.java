@@ -39,7 +39,7 @@ public class Matrix<T> extends Tensor<T> {
     public static <T> Matrix<T> fill(T value, long x, long y) {
         if (x < 0 || y < 0) throw new IllegalArgumentException("x and y must both be positive");
         Matrix<T> matrix = new Matrix<>();
-        matrix.set(value, x, y);
+        matrix.set(value, x - 1, y - 1);
         matrix.backfill(value);
         return matrix;
     }
