@@ -41,109 +41,118 @@ class TensorTest {
         return tensor;
     }
 
-    // TODO: move tests as necessary
-//    @DisplayName("getVector(int dimension, int index)")
-//    @Nested
-//    class GetVector {
-//
-//        @DisplayName("Given empty matrix - throw illegal argument exception")
-//        @Test
-//        void givenEmptyMatrix_throwIllegalArgumentException() {
-//            assertThatThrownBy(() -> Matrix.empty().getVector(0, 0)).isInstanceOf(IllegalArgumentException.class);
-//        }
-//
-//        @DisplayName("Given dimension does not exist - throw illegal argument exception")
-//        @Test
-//        void givenDimensionDoesNotExist_throwIllegalArgumentException() {
-//            assertThatThrownBy(() -> Matrix.of(INT_ARRAY).getVector(2, 0)).isInstanceOf(IllegalArgumentException.class);
-//        }
-//
-//        @DisplayName("Given index does not exist - throw illegal argument exception")
-//        @Test
-//        void givenIndexDoesNotExist_throwIllegalArgumentException() {
-//            assertThatThrownBy(() -> Matrix.of(INT_ARRAY).getVector(0, 3)).isInstanceOf(IllegalArgumentException.class);
-//        }
-//
-//        @DisplayName("Given dimension exists - return vector")
-//        @Test
-//        void givenDimensionExists_returnVector() {
-//            List<Integer> vector = Matrix.of(INT_ARRAY).getVector(1, 2);
-//            assertThat(vector).containsExactly(5, 6);
-//        }
-//
-//    }
+    @DisplayName("fill(T value, long... dimensions)")
+    @Nested
+    class FillLongVarargs {
+        @DisplayName("Given empty varargs - should return tensor with scalar value")
+        @Test
+        void givenEmptyVarargs_shouldReturnTensorWithScalarValue() {
+            Tensor<String> tensor = Tensor.fill("123");
+            assertThat(tensor.order()).isEqualTo(0);
+            assertThat(tensor.dimensions()).isEmpty();
+            assertThat(tensor.get()).isEqualTo("123");
+        }
 
-//    @DisplayName("insertColumn(List<T> column, int x)")
-//    @Nested
-//    class InsertColumn {
-//
-//        @DisplayName("Should insert column")
-//        @Test
-//        void shouldInsertColumn() {
-//            Matrix<Integer> matrix = Matrix.of(INT_ARRAY);
-//            assertThat(matrix.width()).isEqualTo(2);
-//
-//            matrix.insertColumn(List.of(12, 34, 56), 1);
-//
-//            assertMatrix(matrix, "1 12 2 | 3 34 4 | 5 56 6");
-//        }
-//    }
-//
-//    @DisplayName("insertRow(List<T> row, int y")
-//    @Nested
-//    class InsertRow {
-//
-//        @DisplayName("Should insert row")
-//        @Test
-//        void shouldInsertRow() {
-//            Matrix<Integer> matrix = Matrix.of(INT_ARRAY);
-//            assertThat(matrix.height()).isEqualTo(3);
-//
-//            matrix.insertRow(List.of(13, 24), 1);
-//
-//            assertMatrix(matrix, "1 2 | 13 24 | 3 4 | 5 6");
-//        }
-//    }
+        @DisplayName("Given negative vararg - should throw error")
+        @Test
+        void givenNegativeVararg_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", -1L)).isInstanceOf(IllegalArgumentException.class);
+        }
 
-//    @DisplayName("width()")
-//    @Nested
-//    class Width {
-//
-//        @DisplayName("Given empty map - should return 0")
-//        @Test
-//        void givenEmptyMap_shouldReturn0() {
-//            Matrix<Integer> matrix = Matrix.empty();
-//            assertThat(matrix.width()).isEqualTo(0);
-//        }
-//
-//        @DisplayName("Given populated map - should return width")
-//        @Test
-//        void givenPopulatedMap_shouldReturnWidth() {
-//            Matrix<String> matrix = Matrix.filled(" ", 9, 4);
-//            assertThat(matrix.width()).isEqualTo(10);
-//        }
-//
-//    }
-//
-//    @DisplayName("height()")
-//    @Nested
-//    class Height {
-//
-//        @DisplayName("Given an empty map - should return 0")
-//        @Test
-//        void givenEmptyMap_shouldReturn0() {
-//            Matrix<Integer> matrix = Matrix.empty();
-//            assertThat(matrix.height()).isEqualTo(0);
-//        }
-//
-//        @DisplayName("Given populated map - should return height")
-//        @Test
-//        void givenPopulatedMap_shouldReturnWidth() {
-//            Matrix<String> matrix = Matrix.filled("x", 9, 4);
-//            assertThat(matrix.height()).isEqualTo(5);
-//        }
-//
-//    }
+        @DisplayName("Given 0-valued vararg - should throw error")
+        @Test
+        void given0ValuedVararg_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 0L)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given 1 vararg - should return tensor with vector value")
+        @Test
+        void given1Vararg_shouldReturnTensorWithVectorValue() {
+            Tensor<String> tensor = Tensor.fill("123", 3L);
+            assertThat(tensor.order()).isEqualTo(1);
+            assertThat(tensor.dimensions()).containsExactly(3L);
+            assertTensor(tensor, "123 123 123");
+        }
+
+        @DisplayName("Given 2 varargs - should return tensor with matrix value")
+        @Test
+        void given2Varargs_shouldReturnTensorWithMatrixValue() {
+            Tensor<String> tensor = Tensor.fill("123", 3L, 3L);
+            assertThat(tensor.order()).isEqualTo(2);
+            assertThat(tensor.dimensions()).containsExactly(3L, 3L);
+            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123");
+        }
+
+        @DisplayName("Given 3 varargs - should return tensor with 3D value")
+        @Test
+        void given3Varargs_shouldReturnTensorWith3DValue() {
+            Tensor<String> tensor = Tensor.fill("123", 3L, 3L, 2L);
+            assertThat(tensor.order()).isEqualTo(3);
+            assertThat(tensor.dimensions()).containsExactly(3L, 3L, 2L);
+            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123 || 123 123 123 | 123 123 123 | 123 123 123");
+        }
+
+    }
+
+    @DisplayName("fill(T value, int... dimensions")
+    @Nested
+    class FillIntVarargs {
+
+        @DisplayName("Given negative vararg - should throw error")
+        @Test
+        void givenNegativeVararg_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", -1)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given 0-valued vararg - should throw error")
+        @Test
+        void given0ValuedVararg_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 0)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given 1 vararg - should return tensor with vector value")
+        @Test
+        void given1Vararg_shouldReturnTensorWithVectorValue() {
+            Tensor<String> tensor = Tensor.fill("123", 3);
+            assertThat(tensor.order()).isEqualTo(1);
+            assertThat(tensor.dimensions()).containsExactly(3L);
+            assertTensor(tensor, "123 123 123");
+        }
+
+        @DisplayName("Given 2 varargs - should return tensor with matrix value")
+        @Test
+        void given2Varargs_shouldReturnTensorWithMatrixValue() {
+            Tensor<String> tensor = Tensor.fill("123", 3, 3);
+            assertThat(tensor.order()).isEqualTo(2);
+            assertThat(tensor.dimensions()).containsExactly(3L, 3L);
+            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123");
+        }
+
+        @DisplayName("Given 3 varargs - should return tensor with 3D value")
+        @Test
+        void given3Varargs_shouldReturnTensorWith3DValue() {
+            Tensor<String> tensor = Tensor.fill("123", 3, 3, 2);
+            assertThat(tensor.order()).isEqualTo(3);
+            assertThat(tensor.dimensions()).containsExactly(3L, 3L, 2L);
+            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123 || 123 123 123 | 123 123 123 | 123 123 123");
+        }
+
+    }
+
+    @DisplayName("empty()")
+    @Nested
+    class Empty {
+
+        @DisplayName("Should create empty tensor")
+        @Test
+        void shouldCreateEmptyTensor() {
+            Tensor<String> tensor = Tensor.empty();
+            assertThat(tensor.order()).isEqualTo(0);
+            assertThat(tensor.dimensions()).isEmpty();
+            assertThat(tensor.get()).isNull();
+        }
+
+    }
 
     @DisplayName("get(int x, int y)")
     @Nested
@@ -170,29 +179,6 @@ class TensorTest {
         }
 
     }
-
-//    @DisplayName("toNestedList()")
-//    @Nested
-//    class ToNestedList {
-//
-//        @DisplayName("Given empty matrix - should return empty list")
-//        @Test
-//        void givenEmptyMatrix_shouldReturnEmptyList() {
-//            Matrix<Object> empty = Matrix.empty();
-//            assertThat(empty.toNestedList()).isEmpty();
-//        }
-//
-//        @DisplayName("Given populated matrix - should return nested list of values")
-//        @Test
-//        void givenPopulatedMatrix_shouldReturnNestedListOfValues() {
-//            List<List<Integer>> nestedList = Matrix.of(INT_ARRAY).toNestedList();
-//
-//            assertThat(nestedList.get(0)).containsExactly(1, 2);
-//            assertThat(nestedList.get(1)).containsExactly(3, 4);
-//            assertThat(nestedList.get(2)).containsExactly(5, 6);
-//        }
-//
-//    }
 
     @DisplayName("set(int x, int y, T value)")
     @Nested
@@ -325,8 +311,8 @@ class TensorTest {
         @DisplayName("Given single value - should return same tensor")
         @Test
         void givenSingleValue_shouldReturnSameTensor() {
-            Tensor<Integer> transposed = Tensor.fill(1, 0, 0).transpose();
-            assertThat(transposed).isEqualTo(Tensor.fill(1, 0, 0));
+            Tensor<Integer> transposed = Tensor.fill(1, 1, 1).transpose();
+            assertThat(transposed).isEqualTo(Tensor.fill(1, 1, 1));
         }
 
         @DisplayName("Given multiple values - should return transposed tensor")
@@ -544,6 +530,45 @@ class TensorTest {
             Tensor<Integer> slice2 = tensor.slice(Map.of(1, 1L, 2, 0L));
             assertThat(slice2.order()).isEqualTo(1);
             assertTensor(slice2, "3 4");
+        }
+
+    }
+
+    @DisplayName("toMatrix()")
+    @Nested
+    class ToMatrix {
+
+        @DisplayName("Given empty tensor - should throw error")
+        @Test
+        void givenEmptyTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.empty().toMatrix()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given scalar - should throw error")
+        @Test
+        void givenScalar_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123").toMatrix()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given vector - should throw error")
+        @Test
+        void givenVector_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2).toMatrix()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given matrix - should return matrix")
+        @Test
+        void givenMatrix_shouldReturnMatrix() {
+            Matrix<String> matrix = Tensor.fill("123", 2, 2).toMatrix();
+            assertThat(matrix).isInstanceOf(Matrix.class);
+            assertThat(matrix).hasToString("123 123 | 123 123");
+
+        }
+
+        @DisplayName("Given 3D tensor - should throw error")
+        @Test
+        void given3DTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toMatrix()).isInstanceOf(IllegalStateException.class);
         }
 
     }
