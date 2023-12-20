@@ -20,6 +20,12 @@ class IndexTest {
     @Nested
     class OfLongList {
 
+        @DisplayName("Given negative coordinate - should throw error")
+        @Test
+        void givenNegativeCoordinate_shouldThrowError() {
+            assertThatThrownBy(() -> Index.of(List.of(-1L))).isInstanceOf(IllegalArgumentException.class);
+        }
+
         @DisplayName("Given 1 coordinate - should return index with 1 coordinate")
         @Test
         void given1Coordinate_shouldReturnIndexWith1Coordinate() {
@@ -43,6 +49,12 @@ class IndexTest {
     @DisplayName("of(long... coordinates)")
     @Nested
     class ofLongVarargs {
+
+        @DisplayName("Given negative coordinate - should throw error")
+        @Test
+        void givenNegativeCoordinate_shouldThrowError() {
+            assertThatThrownBy(() -> Index.of(-1L)).isInstanceOf(IllegalArgumentException.class);
+        }
 
         @DisplayName("Given no coordinates - should return empty index")
         @Test
@@ -73,6 +85,12 @@ class IndexTest {
     @DisplayName("of(int... coordinates)")
     @Nested
     class ofIntVarargs {
+
+        @DisplayName("Given negative coordinate - should throw error")
+        @Test
+        void givenNegativeCoordinate_shouldThrowError() {
+            assertThatThrownBy(() -> Index.of(-1)).isInstanceOf(IllegalArgumentException.class);
+        }
 
         @DisplayName("Given no coordinates - should return empty index")
         @Test
@@ -229,25 +247,25 @@ class IndexTest {
         @DisplayName("Given parameter index is smaller size than primary index - should throw error")
         @Test
         void givenParameterIndexIsSmallerSizeThanPrimaryIndex_shouldThrowError() {
-            assertThatThrownBy(() -> Index.of(1,2).euclideanDistance(Index.of(1))).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Index.of(1, 2).euclideanDistance(Index.of(1))).isInstanceOf(IllegalArgumentException.class);
         }
 
         @DisplayName("Given parameter index is larger size than primary index - should throw error")
         @Test
         void givenParameterIndexIsLargerSizeThanPrimaryIndex_shouldThrowError() {
-            assertThatThrownBy(() -> Index.of(1).euclideanDistance(Index.of(1,2))).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Index.of(1).euclideanDistance(Index.of(1, 2))).isInstanceOf(IllegalArgumentException.class);
         }
 
         @DisplayName("Given both indices are equal - should return 0")
         @Test
         void givenBothIndicesAreEqual_shouldReturn0() {
-            assertThat(Index.of(5,2,7,1).euclideanDistance(Index.of(5,2,7,1))).isEqualTo(0d);
+            assertThat(Index.of(5, 2, 7, 1).euclideanDistance(Index.of(5, 2, 7, 1))).isEqualTo(0d);
         }
 
         @DisplayName("Given non-equal indices - should return correct distance")
         @Test
         void givenNonEqualIndices_shouldReturnCorrectDistance() {
-            assertThat(Index.of(1,1,0).euclideanDistance(Index.of(2,1,2))).isEqualTo(2.23606797749979d);
+            assertThat(Index.of(1, 1, 0).euclideanDistance(Index.of(2, 1, 2))).isEqualTo(2.23606797749979d);
         }
 
     }
@@ -259,43 +277,43 @@ class IndexTest {
         @DisplayName("Given null parameter index - should throw error")
         @Test
         void givenNullParameterIndex_shouldThrowError() {
-            assertThatThrownBy(() -> Index.of(1,2,3).orthogonalDistance(null)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Index.of(1, 2, 3).orthogonalDistance(null)).isInstanceOf(IllegalArgumentException.class);
         }
 
         @DisplayName("Given parameter index is smaller size than primary index - should throw error")
         @Test
         void givenParameterIndexIsSmallerSizeThanPrimaryIndex_shouldThrowError() {
-            assertThatThrownBy(() -> Index.of(1,2).orthogonalDistance(Index.of(1))).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Index.of(1, 2).orthogonalDistance(Index.of(1))).isInstanceOf(IllegalArgumentException.class);
         }
 
         @DisplayName("Given parameter index is larger size than primary index - should throw error")
         @Test
         void givenParameterIndexIsLargerSizeThanPrimaryIndex_shouldThrowError() {
-            assertThatThrownBy(() -> Index.of(1).orthogonalDistance(Index.of(1,2))).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Index.of(1).orthogonalDistance(Index.of(1, 2))).isInstanceOf(IllegalArgumentException.class);
         }
 
         @DisplayName("Given both indices are equal - should return 0")
         @Test
         void givenBothIndicesAreEqual_shouldReturn0() {
-            assertThat(Index.of(5,2,7,1).orthogonalDistance(Index.of(5,2,7,1))).isEqualTo(0);
+            assertThat(Index.of(5, 2, 7, 1).orthogonalDistance(Index.of(5, 2, 7, 1))).isEqualTo(0);
         }
 
         @DisplayName("Given indices differ by 1 dimension - should return 1")
         @Test
         void givenIndicesDifferBy1Dimension_shouldReturn1() {
-            assertThat(Index.of(5,2,7,1).orthogonalDistance(Index.of(5,20,7,1))).isEqualTo(1);
+            assertThat(Index.of(5, 2, 7, 1).orthogonalDistance(Index.of(5, 20, 7, 1))).isEqualTo(1);
         }
 
         @DisplayName("Given indices differ by 2 dimensions - should return 2")
         @Test
         void givenIndicesDifferBy2Dimensions_shouldReturn2() {
-            assertThat(Index.of(5,2,70,1).orthogonalDistance(Index.of(5,20,7,1))).isEqualTo(2);
+            assertThat(Index.of(5, 2, 70, 1).orthogonalDistance(Index.of(5, 20, 7, 1))).isEqualTo(2);
         }
 
         @DisplayName("Given indices differ by 3 dimensions - should return 3")
         @Test
         void givenIndicesDifferBy3Dimensions_shouldReturn3() {
-            assertThat(Index.of(5,2,70,1).orthogonalDistance(Index.of(5,20,7,10))).isEqualTo(3);
+            assertThat(Index.of(5, 2, 70, 1).orthogonalDistance(Index.of(5, 20, 7, 10))).isEqualTo(3);
         }
 
     }
@@ -372,31 +390,31 @@ class IndexTest {
         @DisplayName("Given null parameter index - should return false")
         @Test
         void givenNullParameterIndex_shouldReturnFalse() {
-            assertThat(Index.of(1,2,3).isSimilar(null)).isFalse();
+            assertThat(Index.of(1, 2, 3).isSimilar(null)).isFalse();
         }
 
         @DisplayName("Given indices are identical - should return true")
         @Test
         void givenIndicesAreIdentical_shouldReturnTrue() {
-            assertThat(Index.of(1,2,3).isSimilar(Index.of(1,2,3))).isTrue();
+            assertThat(Index.of(1, 2, 3).isSimilar(Index.of(1, 2, 3))).isTrue();
         }
 
         @DisplayName("Given parameter index has greater size than primary index - should return false")
         @Test
         void givenParameterIndexHasGreaterSizeThanPrimaryIndex_shouldReturnFalse() {
-            assertThat(Index.of(1,2).isSimilar(Index.of(1,2,3))).isFalse();
+            assertThat(Index.of(1, 2).isSimilar(Index.of(1, 2, 3))).isFalse();
         }
 
         @DisplayName("Given parameter index has smaller size than primary index - should return false")
         @Test
         void givenParameterIndexHasSmallerSizeThanPrimaryIndex_shouldReturnFalse() {
-            assertThat(Index.of(1,2,3).isSimilar(Index.of(1,2))).isFalse();
+            assertThat(Index.of(1, 2, 3).isSimilar(Index.of(1, 2))).isFalse();
         }
 
         @DisplayName("Given both indices have same size - should return true")
         @Test
         void givenBothIndicesHaveSameSize_shouldReturnTrue() {
-            assertThat(Index.of(1,2,3).isSimilar(Index.of(51,37,47))).isTrue();
+            assertThat(Index.of(1, 2, 3).isSimilar(Index.of(51, 37, 47))).isTrue();
         }
 
     }
@@ -468,19 +486,19 @@ class IndexTest {
         @DisplayName("Given no constraints - should return unchanged copy of matrix")
         @Test
         void givenEmptyVarargs_shouldReturnUnchangedCopyOfIndex() {
-            assertThat(Index.of(1,2,3,4,5,6).constrain()).isEqualTo(Index.of(1,2,3,4,5,6));
+            assertThat(Index.of(1, 2, 3, 4, 5, 6).constrain()).isEqualTo(Index.of(1, 2, 3, 4, 5, 6));
         }
 
         @DisplayName("Given 1 constraint - should remove coordinate for given constraint")
         @Test
         void given1Constraint_shouldRemoveCoordinateForGivenConstraint() {
-            assertThat(Index.of(1,2,3,4,5,6).constrain(3)).isEqualTo(Index.of(1,2,3,5,6));
+            assertThat(Index.of(1, 2, 3, 4, 5, 6).constrain(3)).isEqualTo(Index.of(1, 2, 3, 5, 6));
         }
 
         @DisplayName("Given multiple constraints - should remove all coordinates for given constraints")
         @Test
         void givenMultipleConstraints_shouldRemoveAllCoordinatesForGivenConstraints() {
-            assertThat(Index.of(1,2,3,4,5,6).constrain(0,2,4)).isEqualTo(Index.of(2,4,6));
+            assertThat(Index.of(1, 2, 3, 4, 5, 6).constrain(0, 2, 4)).isEqualTo(Index.of(2, 4, 6));
         }
 
     }

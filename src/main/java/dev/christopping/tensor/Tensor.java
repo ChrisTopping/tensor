@@ -1,12 +1,12 @@
 package dev.christopping.tensor;
 
-import java.util.*;
-import java.util.function.BinaryOperator;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 /**
  * Generic multi dimensional sparse tensor implementation
@@ -25,55 +25,78 @@ public class Tensor<T> {
         this.map = new HashMap<>(map);
     }
 
-    public static <T> Tensor<T> fill(T value, long... dimensions) {
-        Tensor<T> tensor = new Tensor<>();
-        long[] zeroIndexedCoordinates = Arrays.stream(dimensions)
-                .map(dimension -> dimension - 1)
-                .peek(dimension -> {
-                    if (dimension < 0) throw new IllegalArgumentException("Dimensions must be positive");
-                }).toArray();
-
-        tensor.set(value, zeroIndexedCoordinates);
-        tensor.backfill(value);
-        return tensor;
-    }
-
-    public static <T> Tensor<T> fill(T value, int... dimensions) {
-        long[] longDimensions = Arrays.stream(dimensions)
-                .mapToLong(dimension -> dimension)
-                .toArray();
-
-        return fill(value, longDimensions);
-    }
-
     public static <T> Tensor<T> empty() {
         return new Tensor<>();
     }
 
+    public static <T> Tensor<T> fill(T value, Index index) {
+        return generate(i -> value, index);
+//        Tensor<T> tensor = new Tensor<>();
+//        long[] zeroIndexedCoordinates = index.coordinates()
+//                .stream()
+//                .mapToLong(Long::valueOf)
+//                .peek(dimension -> {
+//                    if (dimension < 0) throw new IllegalArgumentException("Dimensions must be non-negative");
+//                }).toArray();
+//
+//
+//        tensor.set(value, zeroIndexedCoordinates);
+//        tensor.backfill(value);
+//        return tensor;
+    }
+
+    public static <T> Tensor<T> fill(T value, long... dimensions) {
+        return fill(value, Index.of(dimensions).compute(dimension -> dimension - 1));
+    }
+
+    public static <T> Tensor<T> fill(T value, int... dimensions) {
+        Index compute = Index.of(dimensions).compute(dimension -> dimension - 1);
+        return fill(value, compute);
+    }
+
+    public static <T> Tensor<T> generate(Function<Index, T> generator, Index index) {
+        if (null == generator) throw new IllegalArgumentException("Generator function must not be null");
+        Tensor<T> tensor = new Tensor<>();
+        if (index.isEmpty()) {
+            tensor.set(generator.apply(Index.of()), Index.of());
+        } else {
+            Index.indices(index).forEach(i -> tensor.set(generator.apply(i), i));
+        }
+        return tensor;
+    }
+
+    public static <T> Tensor<T> generate(Function<Index, T> generator, long... dimensions) {
+        return generate(generator, Index.of(dimensions).compute(index -> index - 1));
+    }
+
+    public static <T> Tensor<T> generate(Function<Index, T> generator, int... dimensions) {
+        return generate(generator, Index.of(dimensions).compute(index -> index - 1));
+    }
+
+    public T get(Index index) {
+        return map.get(index);
+    }
+
     public T get(long... coordinates) {
-        return map.get(Index.of(coordinates));
+        return get(Index.of(coordinates));
     }
 
     public T get(int... coordinates) {
-        long[] longCoordinates = Arrays.stream(coordinates)
-                .mapToLong(v -> v)
-                .toArray();
+        return get(Index.of(coordinates));
+    }
 
-        return get(longCoordinates);
+    public void set(T element, Index index) {
+        if (!isEmpty() && order() != index.order())
+            throw new IllegalArgumentException("Index order should be equal to tensor order");
+        map.put(index, element);
     }
 
     public void set(T element, long... coordinates) {
-        if ((!isEmpty()) && (order() != coordinates.length))
-            throw new IllegalArgumentException("Coordinate order should be equal to matrix order");
-        map.put(Index.of(Arrays.stream(coordinates).boxed().collect(Collectors.toList())), element);
+        set(element, Index.of(coordinates));
     }
 
     public void set(T element, int... coordinates) {
-        long[] longCoordinates = Arrays.stream(coordinates)
-                .mapToLong(v -> v)
-                .toArray();
-
-        set(element, longCoordinates);
+        set(element, Index.of(coordinates));
     }
 
     public int order() {
@@ -108,17 +131,11 @@ public class Tensor<T> {
     }
 
     public List<Index> indices() {
-        int order = order();
-        BinaryOperator<List<Index>> combinationFunction = (first, second) ->
-                first.stream()
-                        .map(firstIndex -> second.stream().map(firstIndex::combine)).map(Stream::toList)
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toList());
-        return IntStream.range(0, order)
-                .mapToLong(this::size)
-                .mapToObj(size -> LongStream.range(0, size).mapToObj(Index::of).collect(Collectors.toList()))
-                .reduce(combinationFunction)
-                .orElse(new ArrayList<>());
+        return Index.indices(Index.of(dimensions()).compute(coordinate -> coordinate - 1));
+    }
+
+    public List<T> elements() {
+        return new ArrayList<>(map.values());
     }
 
     public <S> Tensor<S> compute(Function<T, S> computeFunction) {
@@ -142,8 +159,7 @@ public class Tensor<T> {
     }
 
     public boolean isEmpty() {
-        boolean empty = map.isEmpty();
-        return empty;
+        return map.isEmpty();
     }
 
     public Tensor<T> slice(Map<Integer, Long> constraints) {
