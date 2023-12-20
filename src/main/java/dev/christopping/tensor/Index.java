@@ -4,20 +4,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public record Key(List<Long> coordinates) implements Comparable<Key> {
+public record Index(List<Long> coordinates) implements Comparable<Index> {
 
-    public static Key of(List<Long> coordinates) {
+    public static Index of(List<Long> coordinates) {
         if (coordinates.stream().anyMatch(coordinate -> coordinate < 0))
             throw new IllegalArgumentException("Coordinates cannot be negative");
-        return new Key(coordinates);
+        return new Index(coordinates);
     }
 
-    public static Key of(long... coordinates) {
-        return new Key(new ArrayList<>(Arrays.stream(coordinates).boxed().toList()));
+    public static Index of(long... coordinates) {
+        return new Index(new ArrayList<>(Arrays.stream(coordinates).boxed().toList()));
     }
 
-    public static Key of(int... coordinates) {
-        return new Key(new ArrayList<>(Arrays.stream(coordinates).mapToLong(value -> value).boxed().toList()));
+    public static Index of(int... coordinates) {
+        return new Index(new ArrayList<>(Arrays.stream(coordinates).mapToLong(value -> value).boxed().toList()));
     }
 
     /**
@@ -25,7 +25,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
      *
      * @return number of dimensions
      */
-    public int dimensionality() {
+    public int order() {
         return coordinates.size();
     }
 
@@ -37,8 +37,8 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
      * @throws IllegalArgumentException if given dimension is greater than dimensionality
      */
     public long get(int dimension) {
-        if (dimension >= dimensionality())
-            throw new IllegalArgumentException(String.format("Given dimension [%d] is greater than Key dimension [%d]", dimension, dimensionality()));
+        if (dimension >= order())
+            throw new IllegalArgumentException(String.format("Given dimension [%d] is greater than Index dimension [%d]", dimension, order()));
         return coordinates.get(dimension);
     }
 
@@ -50,7 +50,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
      * @return true if dimension is constrained to coordinate or false if not
      */
     public boolean hasCoordinate(int dimension, long coordinate) {
-        return dimension < dimensionality() && get(dimension) == coordinate;
+        return dimension < order() && get(dimension) == coordinate;
     }
 
     /**
@@ -63,9 +63,9 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
         return coordinates.entrySet().stream().allMatch(entry -> hasCoordinate(entry.getKey(), entry.getValue()));
     }
 
-    public double euclideanDistance(Key other) {
-        if (!isSimilar(other)) throw new IllegalArgumentException("Keys should be of same size");
-        double sumOfSquareOfDifferences = IntStream.range(0, dimensionality())
+    public double euclideanDistance(Index other) {
+        if (!isSimilar(other)) throw new IllegalArgumentException("Indices should be of same size");
+        double sumOfSquareOfDifferences = IntStream.range(0, order())
                 .mapToLong(index -> get(index) - other.get(index))
                 .mapToDouble(difference -> Math.pow(difference, 2))
                 .sum();
@@ -74,28 +74,28 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
     }
 
     /**
-     * Calculates the number of orthogonal dimensions by which the two keys disagree
+     * Calculates the number of orthogonal dimensions by which the two indices disagree
      *
-     * @param other Key
+     * @param other Index
      * @return number of disagreeing dimensions
      */
-    public int orthogonalDistance(Key other) {
-        if (!isSimilar(other)) throw new IllegalArgumentException("Keys should be of same size");
-        return (int) IntStream.range(0, dimensionality())
+    public int orthogonalDistance(Index other) {
+        if (!isSimilar(other)) throw new IllegalArgumentException("Indices should be of same size");
+        return (int) IntStream.range(0, order())
                 .filter(index -> other.get(index) != get(index))
                 .count();
     }
 
     /**
-     * Calculates the highest order difference between two keys
+     * Calculates the highest order difference between two indices
      * Where the order is taken as the position of the coordinate in the coordinates list
      *
-     * @param other Key to test against
+     * @param other Index to test against
      * @return highest order difference
      */
-    public int highestOrderDifference(Key other) {
-        if (!isSimilar(other)) throw new IllegalArgumentException("Keys should be of same size");
-        return IntStream.range(0, dimensionality())
+    public int highestOrderDifference(Index other) {
+        if (!isSimilar(other)) throw new IllegalArgumentException("Indices should be of same size");
+        return IntStream.range(0, order())
                 .boxed()
                 .sorted(Collections.reverseOrder())
                 .filter(index -> other.get(index) != get(index))
@@ -105,57 +105,57 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
     }
 
     /**
-     * Determines whether keys have same dimensionality
+     * Determines whether indices have same dimensionality
      *
-     * @param other Key
-     * @return true if other key has same dimensionality, false if not
+     * @param other Index
+     * @return true if other index has same dimensionality, false if not
      */
-    public boolean isSimilar(Key other) {
-        return other != null && other.dimensionality() == dimensionality();
+    public boolean isSimilar(Index other) {
+        return other != null && other.order() == order();
     }
 
     /**
-     * Returns a new key whose coordinates are in reverse order
+     * Returns a new index whose coordinates are in reverse order
      *
-     * @return transposed Key
+     * @return transposed Index
      */
-    public Key transpose() {
+    public Index transpose() {
         int size = coordinates.size();
         List<Long> reversedCoordinates = IntStream.range(0, size)
                 .mapToObj(index -> coordinates.get(size - index - 1))
                 .collect(Collectors.toList());
-        return Key.of(reversedCoordinates);
+        return Index.of(reversedCoordinates);
     }
 
-    public Key reorder(List<Integer> order) {
-        long size = dimensionality();
+    public Index reorder(List<Integer> order) {
+        long size = order();
         int orderSize = order.size();
         if (orderSize != size)
             throw new IllegalArgumentException("Order list size [" + orderSize + "] is not equal to coordinate size [" + size + "]");
         List<Long> reorderedCoordinates = order.stream()
                 .map(coordinates::get)
                 .collect(Collectors.toList());
-        return Key.of(reorderedCoordinates);
+        return Index.of(reorderedCoordinates);
     }
 
-    public Key constrain(int... toRemove) {
+    public Index constrain(int... toRemove) {
         List<Long> constrained = IntStream.range(0, coordinates.size())
                 .filter(index -> Arrays.stream(toRemove).noneMatch(value -> value == index))
                 .mapToObj(coordinates::get)
                 .collect(Collectors.toList());
-        return new Key(constrained);
+        return new Index(constrained);
     }
 
-    public Key combine(Key other) {
+    public Index combine(Index other) {
         ArrayList<Long> newCoordinates = new ArrayList<>(coordinates);
         newCoordinates.addAll(other.coordinates);
-        return Key.of(newCoordinates);
+        return Index.of(newCoordinates);
     }
 
     @Override
-    public int compareTo(Key other) {
-        if (!isSimilar(other)) throw new IllegalArgumentException("Keys should be of same size");
-        int size = dimensionality();
+    public int compareTo(Index other) {
+        if (!isSimilar(other)) throw new IllegalArgumentException("Indices should be of same size");
+        int size = order();
         for (int dimension = 0; dimension < size; dimension++) {
             Long thisCoordinate = coordinates.get(size - dimension - 1);
             Long otherCoordinate = other.coordinates.get(size - dimension - 1);
@@ -170,8 +170,8 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Key key = (Key) o;
-        return new ArrayList<>(this.coordinates).equals(new ArrayList<>(key.coordinates));
+        Index index = (Index) o;
+        return new ArrayList<>(this.coordinates).equals(new ArrayList<>(index.coordinates));
     }
 
     @Override
