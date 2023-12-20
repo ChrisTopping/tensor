@@ -7,12 +7,13 @@ Tensor package for Java
 - [x] Add PR test GHA workflow
 - [x] Rename Key to Index
 - [x] Test all Tensor.java methods
+- [x] Create Vector class
+- [x] Create Scalar class
 - [ ] Add GHA workflow for mvn publish
 - [ ] Add javadocs to all public methods
 - [ ] Test all Matrix.java methods
 - [ ] Add static factory method for Tensor.java that accepts arrays of dynamic order
 - [ ] Add Tensor.reduce() method
-- [ ] Create Vector class
 - [ ] Add Minkowski distance method
 - [ ] Add Manhattan distance method
 - [ ] Add Hamming distance

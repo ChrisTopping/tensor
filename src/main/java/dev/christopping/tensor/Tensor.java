@@ -160,14 +160,29 @@ public class Tensor<T> {
 
     public Matrix<T> toMatrix() {
         if (order() != 2)
-            throw new IllegalStateException("Matrix must be of order 2 to be converted to Matrix2D");
+            throw new IllegalStateException("Tensor must be of order 2 to be converted to Matrix");
         return new Matrix<>(map);
+    }
+
+    public Vector<T> toVector() {
+        if (order() != 1)
+            throw new IllegalStateException("Tensor must be of order 1 to be converted to Vector");
+        return new Vector<>(map);
+    }
+
+    public Scalar<T> toScalar() {
+        if (order() != 0)
+            throw new IllegalStateException("Tensor must be of order 0 to be converted to Scalar");
+        return new Scalar<>(map);
     }
 
     public String toString(String defaultValue) {
         List<Index> sortedIndices = indices().stream()
                 .sorted(Index::compareTo)
                 .collect(Collectors.toList());
+
+        // if scalar - print scalar value
+        if (sortedIndices.size() == 0 && map.containsKey(Index.of())) return map.get(Index.of()).toString();
 
         StringBuilder builder = new StringBuilder();
         Index previous = null;

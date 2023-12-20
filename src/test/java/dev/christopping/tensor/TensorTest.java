@@ -561,6 +561,7 @@ class TensorTest {
         void givenMatrix_shouldReturnMatrix() {
             Matrix<String> matrix = Tensor.fill("123", 2, 2).toMatrix();
             assertThat(matrix).isInstanceOf(Matrix.class);
+            assertThat(matrix.order()).isEqualTo(2);
             assertThat(matrix).hasToString("123 123 | 123 123");
 
         }
@@ -569,6 +570,87 @@ class TensorTest {
         @Test
         void given3DTensor_shouldThrowError() {
             assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toMatrix()).isInstanceOf(IllegalStateException.class);
+        }
+
+    }
+
+    @DisplayName("toVector()")
+    @Nested
+    class ToVector {
+
+        @DisplayName("Given empty tensor - should throw error")
+        @Test
+        void givenEmptyTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.empty().toVector()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given scalar - should throw error")
+        @Test
+        void givenScalar_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123").toVector()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given vector - should return vector")
+        @Test
+        void givenVector_shouldReturnVector() {
+            Vector<String> vector = Tensor.fill("123", 2).toVector();
+            assertThat(vector).isInstanceOf(Vector.class);
+            assertThat(vector.order()).isEqualTo(1);
+            assertThat(vector).hasToString("123 123");
+        }
+
+        @DisplayName("Given matrix - should throw error")
+        @Test
+        void givenMatrix_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2).toVector()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given 3D tensor - should throw error")
+        @Test
+        void given3DTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toVector()).isInstanceOf(IllegalStateException.class);
+        }
+
+    }
+
+    @DisplayName("toScalar()")
+    @Nested
+    class ToScalar {
+
+        @DisplayName("Given empty tensor - should return empty scalar")
+        @Test
+        void givenEmptyTensor_shouldThrowError() {
+            Scalar<Object> scalar = Tensor.empty().toScalar();
+            assertThat(scalar).isInstanceOf(Scalar.class);
+            assertThat(scalar.order()).isEqualTo(0);
+            assertThat(scalar).hasToString("");
+        }
+
+        @DisplayName("Given scalar - should return scalar")
+        @Test
+        void givenScalar_shouldThrowError() {
+            Scalar<String> scalar = Tensor.fill("123").toScalar();
+            assertThat(scalar).isInstanceOf(Scalar.class);
+            assertThat(scalar.order()).isEqualTo(0);
+            assertThat(scalar).hasToString("123");
+        }
+
+        @DisplayName("Given vector - should throw error")
+        @Test
+        void givenVector_shouldReturnVector() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2).toScalar()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given matrix - should throw error")
+        @Test
+        void givenMatrix_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2).toScalar()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given 3D tensor - should throw error")
+        @Test
+        void given3DTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toScalar()).isInstanceOf(IllegalStateException.class);
         }
 
     }
