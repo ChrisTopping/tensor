@@ -25,24 +25,27 @@ public class Tensor<T> {
         this.map = new HashMap<>(map);
     }
 
-    // TODO: test
     public static <T> Tensor<T> fill(T value, long... dimensions) {
         Tensor<T> tensor = new Tensor<>();
-        tensor.set(value, dimensions);
+        long[] zeroIndexedCoordinates = Arrays.stream(dimensions)
+                .map(dimension -> dimension - 1)
+                .peek(dimension -> {
+                    if (dimension < 0) throw new IllegalArgumentException("Dimensions must be positive");
+                }).toArray();
+
+        tensor.set(value, zeroIndexedCoordinates);
         tensor.backfill(value);
         return tensor;
     }
 
-    // TODO: test
     public static <T> Tensor<T> fill(T value, int... dimensions) {
         long[] longDimensions = Arrays.stream(dimensions)
-                .mapToLong(value1 -> value1)
+                .mapToLong(dimension -> dimension)
                 .toArray();
 
         return fill(value, longDimensions);
     }
 
-    // TODO: test
     public static <T> Tensor<T> empty() {
         return new Tensor<>();
     }
@@ -139,7 +142,8 @@ public class Tensor<T> {
     }
 
     public boolean isEmpty() {
-        return map.isEmpty();
+        boolean empty = map.isEmpty();
+        return empty;
     }
 
     public Tensor<T> slice(Map<Integer, Long> constraints) {
@@ -154,9 +158,9 @@ public class Tensor<T> {
         return new Tensor<>(submatrixMap);
     }
 
-    public Matrix<T> toMatrix2D() {
+    public Matrix<T> toMatrix() {
         if (order() != 2)
-            throw new IllegalStateException("dev.christopping.tensor.Matrix must be of order 2 to be converted to Matrix2D");
+            throw new IllegalStateException("Matrix must be of order 2 to be converted to Matrix2D");
         return new Matrix<>(map);
     }
 

@@ -160,7 +160,7 @@ public class Matrix<T> extends Tensor<T> {
         return builder.toString().trim();
     }
 
-    public Tensor<T> toMatrix() {
+    public Tensor<T> toTensor() {
         return new Tensor<>(map);
     }
 }
