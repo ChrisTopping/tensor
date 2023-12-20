@@ -142,7 +142,7 @@ public class Tensor<T> {
         return map.isEmpty();
     }
 
-    public Tensor<T> subtensor(Map<Integer, Long> constraints) {
+    public Tensor<T> slice(Map<Integer, Long> constraints) {
         List<Map.Entry<Key, T>> list = map.entrySet().stream()
                 .filter(entry -> entry.getKey().hasCoordinates(constraints))
                 .map(entry -> {
