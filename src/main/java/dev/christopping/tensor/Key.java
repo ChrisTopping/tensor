@@ -38,7 +38,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
      */
     public long get(int dimension) {
         if (dimension >= dimensionality())
-            throw new IllegalArgumentException(String.format("Given dimension [%d] is greater than dev.christopping.tensor.Key dimension [%d]", dimension, dimensionality()));
+            throw new IllegalArgumentException(String.format("Given dimension [%d] is greater than Key dimension [%d]", dimension, dimensionality()));
         return coordinates.get(dimension);
     }
 
@@ -76,7 +76,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
     /**
      * Calculates the number of orthogonal dimensions by which the two keys disagree
      *
-     * @param other dev.christopping.tensor.Key
+     * @param other Key
      * @return number of disagreeing dimensions
      */
     public int orthogonalDistance(Key other) {
@@ -90,7 +90,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
      * Calculates the highest order difference between two keys
      * Where the order is taken as the position of the coordinate in the coordinates list
      *
-     * @param other dev.christopping.tensor.Key to test against
+     * @param other Key to test against
      * @return highest order difference
      */
     public int highestOrderDifference(Key other) {
@@ -107,7 +107,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
     /**
      * Determines whether keys have same dimensionality
      *
-     * @param other dev.christopping.tensor.Key
+     * @param other Key
      * @return true if other key has same dimensionality, false if not
      */
     public boolean isSimilar(Key other) {
@@ -117,7 +117,7 @@ public record Key(List<Long> coordinates) implements Comparable<Key> {
     /**
      * Returns a new key whose coordinates are in reverse order
      *
-     * @return transposed dev.christopping.tensor.Key
+     * @return transposed Key
      */
     public Key transpose() {
         int size = coordinates.size();
