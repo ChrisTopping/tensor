@@ -502,48 +502,48 @@ class TensorTest {
 
     }
 
-    @DisplayName("subtensor(Map<Integer, Long> constraints)")
+    @DisplayName("slice(Map<Integer, Long> constraints)")
     @Nested
-    class Subtensor {
+    class Slice {
 
         @DisplayName("Given empty tensor - should return empty tensor")
         @Test
         void givenEmptyTensor_shouldReturnEmptyTensor() {
             Tensor<Object> tensor = Tensor.empty();
-            assertThat(tensor.subtensor(Map.of())).isEqualTo(Tensor.empty());
+            assertThat(tensor.slice(Map.of())).isEqualTo(Tensor.empty());
         }
 
         @DisplayName("Given empty map - should return original tensor")
         @Test
         void givenEmptyMap_shouldReturnOriginalTensor() {
             Tensor<Integer> tensor = build(INT_ARRAY_2D);
-            assertThat(tensor.subtensor(Map.of())).isEqualTo(tensor);
+            assertThat(tensor.slice(Map.of())).isEqualTo(tensor);
         }
 
         @DisplayName("Given 1 constraint on 3D tensor - should return correct tensor")
         @Test
         void given1ConstraintOn3DTensor_shouldReturnCorrectMatrix() {
             Tensor<Integer> tensor = build(INT_ARRAY_3D);
-            Tensor<Integer> subtensor = tensor.subtensor(Map.of(2, 0L));
-            assertThat(subtensor.order()).isEqualTo(2);
-            assertTensor(subtensor, "1 2 | 3 4 | 5 6");
+            Tensor<Integer> slice = tensor.slice(Map.of(2, 0L));
+            assertThat(slice.order()).isEqualTo(2);
+            assertTensor(slice, "1 2 | 3 4 | 5 6");
 
-            Tensor<Integer> subtensor2 = tensor.subtensor(Map.of(2, 1L));
-            assertThat(subtensor2.order()).isEqualTo(2);
-            assertTensor(subtensor2, "10 20 | 30 40 | 50 60");
+            Tensor<Integer> slice2 = tensor.slice(Map.of(2, 1L));
+            assertThat(slice2.order()).isEqualTo(2);
+            assertTensor(slice2, "10 20 | 30 40 | 50 60");
         }
 
         @DisplayName("Given 2 constraints on a 3D tensor - should return correct 1D tensor")
         @Test
         void given2ConstraintsOnA3DTensor_shouldReturnCorrect1DTensor() {
             Tensor<Integer> tensor = build(INT_ARRAY_3D);
-            Tensor<Integer> subtensor = tensor.subtensor(Map.of(0, 1L, 1, 0L));
-            assertThat(subtensor.order()).isEqualTo(1);
-            assertTensor(subtensor, "2 20");
+            Tensor<Integer> slice = tensor.slice(Map.of(0, 1L, 1, 0L));
+            assertThat(slice.order()).isEqualTo(1);
+            assertTensor(slice, "2 20");
 
-            Tensor<Integer> subtensor2 = tensor.subtensor(Map.of(1, 1L, 2, 0L));
-            assertThat(subtensor2.order()).isEqualTo(1);
-            assertTensor(subtensor2, "3 4");
+            Tensor<Integer> slice2 = tensor.slice(Map.of(1, 1L, 2, 0L));
+            assertThat(slice2.order()).isEqualTo(1);
+            assertTensor(slice2, "3 4");
         }
 
     }
