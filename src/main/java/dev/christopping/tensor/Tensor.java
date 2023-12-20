@@ -15,13 +15,13 @@ import java.util.stream.Stream;
  */
 public class Tensor<T> {
 
-    protected final Map<Key, T> map;
+    protected final Map<Index, T> map;
 
     protected Tensor() {
         map = new HashMap<>();
     }
 
-    protected Tensor(Map<Key, T> map) {
+    protected Tensor(Map<Index, T> map) {
         this.map = new HashMap<>(map);
     }
 
@@ -51,7 +51,7 @@ public class Tensor<T> {
     }
 
     public T get(long... coordinates) {
-        return map.get(Key.of(coordinates));
+        return map.get(Index.of(coordinates));
     }
 
     public T get(int... coordinates) {
@@ -65,7 +65,7 @@ public class Tensor<T> {
     public void set(T element, long... coordinates) {
         if ((!isEmpty()) && (order() != coordinates.length))
             throw new IllegalArgumentException("Coordinate order should be equal to matrix order");
-        map.put(Key.of(Arrays.stream(coordinates).boxed().collect(Collectors.toList())), element);
+        map.put(Index.of(Arrays.stream(coordinates).boxed().collect(Collectors.toList())), element);
     }
 
     public void set(T element, int... coordinates) {
@@ -79,15 +79,15 @@ public class Tensor<T> {
     public int order() {
         return map.keySet().stream()
                 .findFirst()
-                .map(Key::coordinates)
+                .map(Index::coordinates)
                 .map(List::size)
                 .orElse(0);
     }
 
     public long size(int dimension) {
         return map.keySet().stream()
-                .filter(key -> key.coordinates().size() > dimension)
-                .mapToLong(key -> key.coordinates().get(dimension))
+                .filter(index -> index.coordinates().size() > dimension)
+                .mapToLong(index -> index.coordinates().get(dimension))
                 .max()
                 .orElse(-1) + 1;
     }
@@ -100,41 +100,41 @@ public class Tensor<T> {
     }
 
     public Tensor<T> transpose() {
-        return computeAndUpdateKeys(entry -> Map.entry(entry.getKey().transpose(), entry.getValue()));
+        return computeAndUpdateIndices(entry -> Map.entry(entry.getKey().transpose(), entry.getValue()));
     }
 
     public void backfill(T element) {
-        keys().forEach(key -> map.putIfAbsent(key, element));
+        indices().forEach(index -> map.putIfAbsent(index, element));
     }
 
-    public List<Key> keys() {
+    public List<Index> indices() {
         int order = order();
-        BinaryOperator<List<Key>> combinationFunction = (first, second) ->
+        BinaryOperator<List<Index>> combinationFunction = (first, second) ->
                 first.stream()
-                        .map(firstKey -> second.stream().map(firstKey::combine)).map(Stream::toList)
+                        .map(firstIndex -> second.stream().map(firstIndex::combine)).map(Stream::toList)
                         .flatMap(Collection::stream)
                         .collect(Collectors.toList());
         return IntStream.range(0, order)
                 .mapToLong(this::size)
-                .mapToObj(size -> LongStream.range(0, size).mapToObj(Key::of).collect(Collectors.toList()))
+                .mapToObj(size -> LongStream.range(0, size).mapToObj(Index::of).collect(Collectors.toList()))
                 .reduce(combinationFunction)
                 .orElse(new ArrayList<>());
     }
 
     public <S> Tensor<S> compute(Function<T, S> computeFunction) {
-        Map<Key, S> map = this.map.entrySet().stream()
+        Map<Index, S> map = this.map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> computeFunction.apply(entry.getValue())));
         return new Tensor<>(map);
     }
 
-    public <S> Tensor<S> computeWithKeys(Function<Map.Entry<Key, T>, S> computeFunction) {
-        Map<Key, S> map = this.map.entrySet().stream()
+    public <S> Tensor<S> computeWithIndices(Function<Map.Entry<Index, T>, S> computeFunction) {
+        Map<Index, S> map = this.map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, computeFunction));
         return new Tensor<>(map);
     }
 
-    public <S> Tensor<S> computeAndUpdateKeys(Function<Map.Entry<Key, T>, Map.Entry<Key, S>> computeFunction) {
-        Map<Key, S> map = this.map.entrySet().stream()
+    public <S> Tensor<S> computeAndUpdateIndices(Function<Map.Entry<Index, T>, Map.Entry<Index, S>> computeFunction) {
+        Map<Index, S> map = this.map.entrySet().stream()
                 .map(computeFunction)
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -147,13 +147,13 @@ public class Tensor<T> {
     }
 
     public Tensor<T> slice(Map<Integer, Long> constraints) {
-        List<Map.Entry<Key, T>> list = map.entrySet().stream()
+        List<Map.Entry<Index, T>> list = map.entrySet().stream()
                 .filter(entry -> entry.getKey().hasCoordinates(constraints))
                 .map(entry -> {
-                    Key constrained = entry.getKey().constrain(constraints.keySet().stream().mapToInt(value -> value).toArray());
+                    Index constrained = entry.getKey().constrain(constraints.keySet().stream().mapToInt(value -> value).toArray());
                     return Map.entry(constrained, entry.getValue());
                 }).collect(Collectors.toList());
-        Map<Key, T> submatrixMap = list.stream()
+        Map<Index, T> submatrixMap = list.stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new Tensor<>(submatrixMap);
     }
@@ -165,13 +165,13 @@ public class Tensor<T> {
     }
 
     public String toString(String defaultValue) {
-        List<Key> sortedKeys = keys().stream()
-                .sorted(Key::compareTo)
+        List<Index> sortedIndices = indices().stream()
+                .sorted(Index::compareTo)
                 .collect(Collectors.toList());
 
         StringBuilder builder = new StringBuilder();
-        Key previous = null;
-        for (Key current : sortedKeys) {
+        Index previous = null;
+        for (Index current : sortedIndices) {
             if (previous != null) {
 
                 int distance = previous.highestOrderDifference(current);

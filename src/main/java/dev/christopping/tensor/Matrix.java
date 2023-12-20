@@ -12,7 +12,7 @@ public class Matrix<T> extends Tensor<T> {
         super();
     }
 
-    protected Matrix(Map<Key, T> map) {
+    protected Matrix(Map<Index, T> map) {
         super(map);
     }
 
@@ -79,14 +79,14 @@ public class Matrix<T> extends Tensor<T> {
 
     public long width() {
         return map.keySet().stream()
-                .mapToLong(key -> key.coordinates().get(0))
+                .mapToLong(index -> index.coordinates().get(0))
                 .max()
                 .orElse(-1) + 1;
     }
 
     public long height() {
         return map.keySet().stream()
-                .mapToLong(key -> key.coordinates().get(1))
+                .mapToLong(index -> index.coordinates().get(1))
                 .max()
                 .orElse(-1) + 1;
     }
@@ -98,20 +98,20 @@ public class Matrix<T> extends Tensor<T> {
     }
 
     public void insertColumn(List<T> column, long x) {
-        Map<Key, T> shiftedMap = map.entrySet().stream()
+        Map<Index, T> shiftedMap = map.entrySet().stream()
                 .map(entry -> {
-                    List<Long> key = entry.getKey().coordinates();
-                    long columnIndex = key.get(0);
+                    List<Long> coordinates = entry.getKey().coordinates();
+                    long columnIndex = coordinates.get(0);
                     if (columnIndex >= x) {
-                        key.set(0, columnIndex + 1L);
-                        return Map.entry(Key.of(key), entry.getValue());
+                        coordinates.set(0, columnIndex + 1L);
+                        return Map.entry(Index.of(coordinates), entry.getValue());
                     } else {
                         return entry;
                     }
                 }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         IntStream.range(0, column.size())
-                .forEach(y -> shiftedMap.put(Key.of(x, y), column.get(y)));
+                .forEach(y -> shiftedMap.put(Index.of(x, y), column.get(y)));
 
         map.clear();
         map.putAll(shiftedMap);
@@ -122,20 +122,20 @@ public class Matrix<T> extends Tensor<T> {
     }
 
     public void insertRow(List<T> row, long y) {
-        Map<Key, T> shiftedMap = map.entrySet().stream()
+        Map<Index, T> shiftedMap = map.entrySet().stream()
                 .map(entry -> {
-                    List<Long> key = entry.getKey().coordinates();
-                    long rowIndex = key.get(1);
+                    List<Long> coordinates = entry.getKey().coordinates();
+                    long rowIndex = coordinates.get(1);
                     if (rowIndex >= y) {
-                        key.set(1, rowIndex + 1L);
-                        return Map.entry(Key.of(key), entry.getValue());
+                        coordinates.set(1, rowIndex + 1L);
+                        return Map.entry(Index.of(coordinates), entry.getValue());
                     } else {
                         return entry;
                     }
                 }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         IntStream.range(0, row.size())
-                .forEach(x -> shiftedMap.put(Key.of(x, y), row.get(x)));
+                .forEach(x -> shiftedMap.put(Index.of(x, y), row.get(x)));
 
         map.clear();
         map.putAll(shiftedMap);
@@ -151,7 +151,7 @@ public class Matrix<T> extends Tensor<T> {
         long height = size(1);
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                T value = map.getOrDefault(Key.of(x, y), null);
+                T value = map.getOrDefault(Index.of(x, y), null);
                 builder.append(value != null ? value.toString() : " ");
                 if (x + 1 < width) builder.append(" ");
             }

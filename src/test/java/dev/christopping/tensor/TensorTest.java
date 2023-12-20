@@ -399,15 +399,15 @@ class TensorTest {
 
     }
 
-    @DisplayName("computeWithKeys(Function<Map.Entry<Key, T>, S> computeFunction)")
+    @DisplayName("computeWithIndices(Function<Map.Entry<Index, T>, S> computeFunction)")
     @Nested
-    class ComputeWithKeys {
+    class ComputeWithIndices {
 
         @DisplayName("Given empty - null op")
         @Test
         void givenEmpty_nullOp() {
             Tensor<Integer> empty = Tensor.empty();
-            Tensor<String> computed = empty.computeWithKeys(entry -> "" + entry.getKey().coordinates().get(0) + entry.getKey().coordinates().get(1) + entry.getValue());
+            Tensor<String> computed = empty.computeWithIndices(entry -> "" + entry.getKey().coordinates().get(0) + entry.getKey().coordinates().get(1) + entry.getValue());
 
             assertThat(computed).isEqualTo(Tensor.empty());
         }
@@ -416,7 +416,7 @@ class TensorTest {
         @Test
         void givenPopulatedIntegerTensor_shouldApplyComputeFunction() {
             Tensor<Integer> tensor = build(INT_ARRAY_2D);
-            Tensor<String> computed = tensor.computeWithKeys(entry -> "" + entry.getKey().coordinates().get(0) + entry.getKey().coordinates().get(1) + entry.getValue());
+            Tensor<String> computed = tensor.computeWithIndices(entry -> "" + entry.getKey().coordinates().get(0) + entry.getKey().coordinates().get(1) + entry.getValue());
 
             String[][] negativeIntArray = {{"001", "102"}, {"013", "114"}, {"025", "126"}};
             assertThat(computed).isEqualTo(build(negativeIntArray));
@@ -426,21 +426,21 @@ class TensorTest {
 
     }
 
-    @DisplayName("computeAndUpdateKeys(Function<Map.Entry<Key, T>, Map.Entry<Key, S>> computeFunction)")
+    @DisplayName("computeAndUpdateIndices(Function<Map.Entry<Index, T>, Map.Entry<Index, S>> computeFunction)")
     @Nested
-    class ComputeAndUpdateKeys {
+    class ComputeAndUpdateIndices {
 
         @DisplayName("Given empty tensor - null op")
         @Test
         void givenEmptyTensor_nullOp() {
             Tensor<Integer> empty = Tensor.empty();
 
-            Function<Map.Entry<Key, Integer>, Map.Entry<Key, Integer>> computeFunction = entry ->
+            Function<Map.Entry<Index, Integer>, Map.Entry<Index, Integer>> computeFunction = entry ->
                     Map.entry(
-                            Key.of(entry.getKey().coordinates().get(0) * 2, entry.getKey().coordinates().get(1) * 2),
+                            Index.of(entry.getKey().coordinates().get(0) * 2, entry.getKey().coordinates().get(1) * 2),
                             entry.getValue() * 4
                     );
-            Tensor<Integer> computed = empty.computeAndUpdateKeys(computeFunction);
+            Tensor<Integer> computed = empty.computeAndUpdateIndices(computeFunction);
 
             assertThat(computed).isEqualTo(Tensor.empty());
         }
@@ -450,13 +450,13 @@ class TensorTest {
         void givenPopulatedTensor_shouldApplyComputeFunction() {
             Tensor<Integer> tensor = build(INT_ARRAY_2D);
 
-            Function<Map.Entry<Key, Integer>, Map.Entry<Key, Integer>> computeFunction = entry ->
+            Function<Map.Entry<Index, Integer>, Map.Entry<Index, Integer>> computeFunction = entry ->
                     Map.entry(
-                            Key.of(entry.getKey().coordinates().get(0) * 2, entry.getKey().coordinates().get(1) * 2),
+                            Index.of(entry.getKey().coordinates().get(0) * 2, entry.getKey().coordinates().get(1) * 2),
                             entry.getValue() * 4
                     );
 
-            Tensor<Integer> computed = tensor.computeAndUpdateKeys(computeFunction);
+            Tensor<Integer> computed = tensor.computeAndUpdateIndices(computeFunction);
             computed.backfill(0);
 
             assertTensor(computed, "4 0 8 | 0 0 0 | 12 0 16 | 0 0 0 | 20 0 24");
