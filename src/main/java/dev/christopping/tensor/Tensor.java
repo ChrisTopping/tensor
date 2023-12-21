@@ -88,7 +88,7 @@ public class Tensor<T> {
     public static <T> Tensor<T> combine(List<Tensor<T>> slices) {
         if (slices == null || slices.isEmpty()) return Tensor.empty();
         Map<Index, T> map = IntStream.range(0, slices.size())
-                .mapToObj(coordinate -> slices.get(coordinate).computeAndUpdateIndices(entry -> Map.entry(entry.getKey().stretch(coordinate), entry.getValue())))
+                .mapToObj(coordinate -> slices.get(coordinate).computeAndUpdateIndices(entry -> Map.entry(entry.getKey().extrude(coordinate), entry.getValue())))
                 .map(tensor -> new HashMap<>(tensor.map))
                 .map(HashMap::entrySet)
                 .flatMap(Collection::stream)

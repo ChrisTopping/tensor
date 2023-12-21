@@ -25,7 +25,7 @@ public record Index(List<Long> coordinates) implements Comparable<Index> {
     }
 
     public static List<Index> indices(Index maxIndex) {
-        if (maxIndex.isEmpty()) return new ArrayList<>();
+        if (maxIndex == null || maxIndex.isEmpty()) return new ArrayList<>();
         int order = maxIndex.order();
 
         BinaryOperator<List<Index>> combinationFunction = (first, second) ->
@@ -39,7 +39,10 @@ public record Index(List<Long> coordinates) implements Comparable<Index> {
                 .map(coordinate -> coordinate + 1)
                 .mapToObj(size -> LongStream.range(0, size).mapToObj(Index::of).collect(Collectors.toList()))
                 .reduce(combinationFunction)
-                .orElse(new ArrayList<>());
+                .orElse(new ArrayList<>())
+                .stream()
+                .sorted(Index::compareTo)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -183,7 +186,7 @@ public record Index(List<Long> coordinates) implements Comparable<Index> {
         return Index.of(computedCoordinates);
     }
 
-    public Index stretch(long coordinate) {
+    public Index extrude(long coordinate) {
         ArrayList<Long> stretchedCoordinates = new ArrayList<>(this.coordinates);
         stretchedCoordinates.add(coordinate);
         return Index.of(stretchedCoordinates);
@@ -196,7 +199,7 @@ public record Index(List<Long> coordinates) implements Comparable<Index> {
         for (int dimension = 0; dimension < size; dimension++) {
             Long thisCoordinate = coordinates.get(size - dimension - 1);
             Long otherCoordinate = other.coordinates.get(size - dimension - 1);
-            if (!java.util.Objects.equals(thisCoordinate, otherCoordinate)) {
+            if (!Objects.equals(thisCoordinate, otherCoordinate)) {
                 return thisCoordinate.compareTo(otherCoordinate);
             }
         }

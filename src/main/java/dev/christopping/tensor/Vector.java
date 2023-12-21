@@ -31,10 +31,7 @@ public class Vector<T> extends Tensor<T> {
 
     public static <T> Vector<T> fill(T value, long size) {
         if (size < 0) throw new IllegalArgumentException("Size must both be positive");
-        Vector<T> vector = new Vector<>();
-        vector.set(value, size - 1);
-        vector.backfill(value);
-        return vector;
+        return Tensor.fill(value, size).toVector();
     }
 
     public static <T> Vector<T> fill(T value, int size) {
