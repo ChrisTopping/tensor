@@ -1,9 +1,6 @@
 package dev.christopping.tensor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -29,20 +26,35 @@ public class Tensor<T> {
         return new Tensor<>();
     }
 
+    public static <T> Tensor<T> of(List<?> list, Class<T> type) {
+        if (list == null || list.isEmpty()) {
+            return empty();
+        } else if (list.get(0) instanceof List) {
+            List<Tensor<T>> slices = list.stream().map(sublist -> of((List<?>) sublist, type)).collect(Collectors.toList());
+            return Tensor.combine(slices);
+        } else if (list.size() > 1) {
+            return Vector.of(list).expect(type);
+        } else {
+            return Scalar.of(list.get(0)).expect(type);
+        }
+    }
+
+    public static <T> Tensor<T> of(Object[] array, Class<T> type) {
+        if (array == null || array.length == 0) {
+            return empty();
+        } else if (type.isInstance(array[0]) && array.length > 1) {
+            return Vector.of(array).expect(type);
+        } else if (type.isInstance(array[0]) && array.length == 1) {
+            return Scalar.of(array[0]).expect(type);
+        } else {
+            List<Tensor<T>> slices = Arrays.stream(array).map(sublist -> of((Object[]) sublist, type)).collect(Collectors.toList());
+            return Tensor.combine(slices);
+
+        }
+    }
+
     public static <T> Tensor<T> fill(T value, Index index) {
         return generate(i -> value, index);
-//        Tensor<T> tensor = new Tensor<>();
-//        long[] zeroIndexedCoordinates = index.coordinates()
-//                .stream()
-//                .mapToLong(Long::valueOf)
-//                .peek(dimension -> {
-//                    if (dimension < 0) throw new IllegalArgumentException("Dimensions must be non-negative");
-//                }).toArray();
-//
-//
-//        tensor.set(value, zeroIndexedCoordinates);
-//        tensor.backfill(value);
-//        return tensor;
     }
 
     public static <T> Tensor<T> fill(T value, long... dimensions) {
@@ -71,6 +83,21 @@ public class Tensor<T> {
 
     public static <T> Tensor<T> generate(Function<Index, T> generator, int... dimensions) {
         return generate(generator, Index.of(dimensions).compute(index -> index - 1));
+    }
+
+    public static <T> Tensor<T> combine(List<Tensor<T>> slices) {
+        if (slices == null || slices.isEmpty()) return Tensor.empty();
+        Map<Index, T> map = IntStream.range(0, slices.size())
+                .mapToObj(coordinate -> slices.get(coordinate).computeAndUpdateIndices(entry -> Map.entry(entry.getKey().stretch(coordinate), entry.getValue())))
+                .map(tensor -> new HashMap<>(tensor.map))
+                .map(HashMap::entrySet)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return new Tensor<>(map);
+    }
+
+    public static <T> Tensor<T> combine(Tensor<T>[] slices) {
+        return combine(Arrays.stream(slices).toList());
     }
 
     public T get(Index index) {
@@ -172,6 +199,12 @@ public class Tensor<T> {
         Map<Index, T> submatrixMap = list.stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new Tensor<>(submatrixMap);
+    }
+
+    public <S> Tensor<S> expect(Class<S> type) {
+        if (!elements().stream().allMatch(type::isInstance))
+            throw new IllegalArgumentException("Tensor cannot be expected to be of given type");
+        return (Tensor<S>) this;
     }
 
     public Matrix<T> toMatrix() {

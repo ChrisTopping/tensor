@@ -183,6 +183,12 @@ public record Index(List<Long> coordinates) implements Comparable<Index> {
         return Index.of(computedCoordinates);
     }
 
+    public Index stretch(long coordinate) {
+        ArrayList<Long> stretchedCoordinates = new ArrayList<>(this.coordinates);
+        stretchedCoordinates.add(coordinate);
+        return Index.of(stretchedCoordinates);
+    }
+
     @Override
     public int compareTo(Index other) {
         if (!isSimilar(other)) throw new IllegalArgumentException("Indices should be of same size");
