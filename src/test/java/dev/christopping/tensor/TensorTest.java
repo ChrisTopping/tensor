@@ -1015,6 +1015,40 @@ class TensorTest {
 
     }
 
+    @DisplayName("extrude(long size")
+    @Nested
+    class Extrude {
+
+        @DisplayName("Given empty tensor - should return empty tensor")
+        @Test
+        void givenEmptyTensor_shouldReturnEmptyTensor() {
+            assertThat(Tensor.empty().extrude(2)).isEqualTo(Tensor.empty());
+        }
+
+        @DisplayName("Given scalar - should return extruded vector of given size")
+        @Test
+        void givenScalar_shouldReturnExtrudedVectorOfGivenSize() {
+            Tensor<Object> tensor = Tensor.empty();
+            tensor.set("abc");
+            assertTensor(tensor.extrude(3), "abc abc abc");
+        }
+
+        @DisplayName("Given vector - should return extruded matrix of given size")
+        @Test
+        void givenVector_shouldReturnExtrudedMatrixOfGivenSize() {
+            Tensor<String> tensor = Tensor.of(new String[]{"abc", "def", "ghi"}, String.class);
+            assertTensor(tensor.extrude(3), "abc def ghi | abc def ghi | abc def ghi");
+        }
+
+        @DisplayName("Given matrix - should return extruded 3-tensor of given size")
+        @Test
+        void givenMatrix_shouldReturnExtruded3TensorOfGivenSize() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertTensor(tensor.extrude(2), "1 2 | 3 4 | 5 6 || 1 2 | 3 4 | 5 6");
+        }
+
+    }
+
     @DisplayName("toMatrix()")
     @Nested
     class ToMatrix {
