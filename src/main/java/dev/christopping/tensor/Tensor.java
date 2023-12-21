@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * Generic multi dimensional sparse tensor implementation
@@ -205,6 +206,17 @@ public class Tensor<T> {
         if (!elements().stream().allMatch(type::isInstance))
             throw new IllegalArgumentException("Tensor cannot be expected to be of given type");
         return (Tensor<S>) this;
+    }
+
+    public Tensor<T> extrude(long size) {
+        Map<Index, T> extrudedMap = map.entrySet().stream()
+                .map(entry -> {
+                    return LongStream.range(0, size)
+                            .mapToObj(coordinate -> Map.entry(entry.getKey().extrude(coordinate), entry.getValue()))
+                            .collect(Collectors.toList());
+                }).flatMap(Collection::stream)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return new Tensor<>(extrudedMap);
     }
 
     public Matrix<T> toMatrix() {
