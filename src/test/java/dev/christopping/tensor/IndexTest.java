@@ -118,6 +118,39 @@ class IndexTest {
 
     }
 
+    @DisplayName("indices(Index maxIndex)")
+    @Nested
+    class Indices {
+
+        @DisplayName("Given index is null - should return empty list")
+        @Test
+        void givenIndexIsNull_shouldReturnEmptyList() {
+            assertThat(Index.indices(null)).isEmpty();
+        }
+
+        @DisplayName("Given index is empty - should return empty list")
+        @Test
+        void givenIndexIsEmpty_shouldReturnEmptyList() {
+            assertThat(Index.indices(Index.of())).isEmpty();
+        }
+
+        @DisplayName("Given index is not empty - should return list containing all lesser indices")
+        @Test
+        void givenIndexIsNotEmpty_shouldReturnListContainingAllLesserIndices() {
+            assertThat(Index.indices(Index.of(1, 1, 1))).containsExactly(
+                    Index.of(0, 0, 0),
+                    Index.of(1, 0, 0),
+                    Index.of(0, 1, 0),
+                    Index.of(1, 1, 0),
+                    Index.of(0, 0, 1),
+                    Index.of(1, 0, 1),
+                    Index.of(0, 1, 1),
+                    Index.of(1, 1, 1)
+            );
+        }
+
+    }
+
     @DisplayName("order()")
     @Nested
     class Order {
@@ -383,6 +416,26 @@ class IndexTest {
 
     }
 
+    @DisplayName("isEmpty()")
+    @Nested
+    class IsEmpty {
+
+        @DisplayName("Given index is empty - should return true")
+        @Test
+        void givenIndexIsEmpty_shouldReturnTrue() {
+            assertThat(Index.of().isEmpty()).isTrue();
+        }
+
+        @DisplayName("Given index is not empty - should return false")
+        @Test
+        void givenIndexIsNotEmpty_shouldReturnFalse() {
+            assertThat(Index.of(0).isEmpty()).isFalse();
+            assertThat(Index.of(0, 0).isEmpty()).isFalse();
+            assertThat(Index.of(0, 0, 0).isEmpty()).isFalse();
+        }
+
+    }
+
     @DisplayName("isSimilar(Index other)")
     @Nested
     class IsSimilar {
@@ -533,6 +586,43 @@ class IndexTest {
 
     }
 
+    @DisplayName("compute(Function<Long, Long> computeFunction)")
+    @Nested
+    class Compute {
+
+        @DisplayName("Given index is empty - return empty index")
+        @Test
+        void givenIndexIsEmpty_returnEmptyIndex() {
+            assertThat(Index.of().compute(i -> i).isEmpty()).isTrue();
+        }
+
+        @DisplayName("Given non-empty index - return computed index")
+        @Test
+        void givenNonEmptyIndex_returnComputedIndex() {
+            Index computed = Index.of(1, 2, 3, 4).compute(i -> i * i);
+            assertThat(computed.coordinates()).containsExactly(1L, 4L, 9L, 16L);
+        }
+
+    }
+
+    @DisplayName("extrude(long coordinate)")
+    @Nested
+    class Extrude {
+
+        @DisplayName("Given empty array - should return order 1 index")
+        @Test
+        void givenEmptyArray_shouldReturnOrder1Index() {
+            assertThat(Index.of().extrude(5).coordinates()).containsExactly(5L);
+        }
+
+        @DisplayName("Given non-empty array - should append coordinate to end of list")
+        @Test
+        void givenNonEmptyArray_shouldAppendCoordinateToEndOfList() {
+            assertThat(Index.of(4, 1, 7, 2).extrude(5).coordinates()).containsExactly(4L, 1L, 7L, 2L, 5L);
+        }
+
+    }
+
     @DisplayName("compareTo(Index other)")
     @Nested
     class CompareTo {
@@ -559,6 +649,48 @@ class IndexTest {
         @Test
         void givenBothIndicesAreEmpty_shouldReturn0() {
             assertThat(Index.of().compareTo(Index.of())).isEqualTo(0);
+        }
+
+        @DisplayName("Given both are identical - should return 0")
+        @Test
+        void givenBothAreIdentical_shouldReturn0() {
+            assertThat(Index.of(1, 5, 3).compareTo(Index.of(1, 5, 3))).isEqualTo(0);
+        }
+
+        @DisplayName("Given both are order 1 and parameter is greater - should return -1")
+        @Test
+        void givenBothAreOrder1AndParameterHasGreaterValue_shouldReturnMinus1() {
+            assertThat(Index.of(1).compareTo(Index.of(2))).isEqualTo(-1);
+        }
+
+        @DisplayName("Given both are order 1 and parameter is smaller - should return 1")
+        @Test
+        void givenBothAreOrder1AndParameterIsSmaller_shouldReturn1() {
+            assertThat(Index.of(2).compareTo(Index.of(1))).isEqualTo(1);
+        }
+
+        @DisplayName("Given parameter's last coordinate is greater - should return -1")
+        @Test
+        void givenParametersLastCoordinateIsGreater_shouldReturnMinus1() {
+            assertThat(Index.of(5, 1).compareTo(Index.of(4, 2))).isEqualTo(-1);
+        }
+
+        @DisplayName("Given parameter's last coordinate is smaller - should return 1")
+        @Test
+        void givenParametersLastCoordinateIsSmaller_shouldReturn1() {
+            assertThat(Index.of(4, 2).compareTo(Index.of(5, 1))).isEqualTo(1);
+        }
+
+        @DisplayName("Given parameter's last different coordinate is greater - should return -1")
+        @Test
+        void givenParametersLastDifferentCoordinateIsGreater_shouldReturnMinus1() {
+            assertThat(Index.of(5, 1, 8).compareTo(Index.of(4, 2, 8))).isEqualTo(-1);
+        }
+
+        @DisplayName("Given parameter's last different coordinate is smaller - should return 1")
+        @Test
+        void givenParametersLastDifferentCoordinateIsSmaller_shouldReturn1() {
+            assertThat(Index.of(4, 2, 8).compareTo(Index.of(5, 1, 8))).isEqualTo(1);
         }
 
     }
@@ -603,6 +735,24 @@ class IndexTest {
         void givenIndexWithSameCoordinatesFromDifferentFactory_shouldReturnTrue() {
             assertThat(Index.of(1, 2, 3).equals(Index.of(1L, 2L, 3L))).isTrue();
             assertThat(Index.of(1L, 2L, 3L).equals(Index.of(1, 2, 3))).isTrue();
+        }
+
+    }
+
+    @DisplayName("hashCode()")
+    @Nested
+    class HashCode {
+
+        @DisplayName("Given empty - should be repeatable")
+        @Test
+        void givenEmpty_shouldBeRepeatable() {
+            assertThat(Index.of().hashCode()).isEqualTo(Index.of().hashCode());
+        }
+
+        @DisplayName("Given non-empty - should be repeatable")
+        @Test
+        void givenNonEmpty_shouldBeRepeatable() {
+            assertThat(Index.of(5,3,7).hashCode()).isEqualTo(Index.of(5L,3L,7L).hashCode());
         }
 
     }

@@ -1,8 +1,17 @@
 package dev.christopping.tensor;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class MatrixTest {
+
+    @DisplayName("of(List<List<T>> nestedList)")
+    @Nested
+    class OfNestedList {
+
+    }
 
 //    @DisplayName("toNestedList()")
 //    @Nested
