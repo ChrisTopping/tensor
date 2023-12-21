@@ -1,6 +1,7 @@
 package dev.christopping.tensor;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -184,6 +185,14 @@ public class Tensor<T> {
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new Tensor<>(map);
+    }
+
+    public <S> Tensor<S> piecewise(BiFunction<T, T, S> piecewiseFunction, Tensor<T> other) {
+        if (other == null || !dimensions().equals(other.dimensions())) throw new IllegalArgumentException("Tensor dimensions must match");
+        Map<Index, S> resultMap = map.keySet().stream()
+                .filter(index -> other.get(index) != null)
+                .collect(Collectors.toMap(index -> index, index -> piecewiseFunction.apply(get(index), other.get(index))));
+        return new Tensor<>(resultMap);
     }
 
     public boolean isEmpty() {

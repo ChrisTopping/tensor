@@ -915,6 +915,50 @@ class TensorTest {
 
     }
 
+    @DisplayName("piecewise(BiFunction<T, T, S> piecewiseFunction, Tensor other")
+    @Nested
+    class Piecewise {
+
+        @DisplayName("Given null other - should throw error")
+        @Test
+        void givenNullOther_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.empty().piecewise((o, o2) -> o, null)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given other has smaller order - should throw error")
+        @Test
+        void givenOtherHasSmallerOrder_shouldThrowError() {
+            Tensor<Integer> first = Tensor.of(INT_ARRAY_3D, Integer.class);
+            Tensor<Integer> second = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThatThrownBy(() -> first.piecewise((a, b) -> a * b, second)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given other has larger order - should throw error")
+        @Test
+        void givenOtherHasLargerOrder_shouldThrowError() {
+            Tensor<Integer> first = Tensor.of(INT_ARRAY_2D, Integer.class);
+            Tensor<Integer> second = Tensor.of(INT_ARRAY_3D, Integer.class);
+            assertThatThrownBy(() -> first.piecewise((a, b) -> a * b, second)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given orders match but sizes do not - should throw error")
+        @Test
+        void givenOrdersMatchButSizesDoNot_shouldThrowError() {
+            Tensor<Integer> first = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
+            Tensor<Integer> second = Tensor.of(new Integer[][]{{10, 20}, {30, 40}, {50, 60}}, Integer.class);
+            assertThatThrownBy(() -> first.piecewise((a, b) -> a * b, second)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given orders and sizes match - should perform piecewise operation")
+        @Test
+        void givenOrdersAndSizesMatch_shouldPerformPiecewiseOperation() {
+            Tensor<Integer> first = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
+            Tensor<Integer> second = Tensor.of(new Integer[][]{{10, 20}, {30, 40}}, Integer.class);
+            assertTensor(first.piecewise((a, b) -> a * b, second), "10 40 | 90 160");
+        }
+
+    }
+
     @DisplayName("isEmpty()")
     @Nested
     class IsEmpty {
