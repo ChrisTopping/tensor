@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'java-library'
     id 'maven-publish'
 }
 
@@ -39,11 +40,14 @@ publishing {
         }
     }
     publications {
-        register("jar", MavenPublication) {
-            from(components["java"])
-            pom {
-                url.set("https://github.com/ChrisTopping/tensor.git")
-            }
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    jar {
+        into("META-INF/maven/$project.group/$project.name") {
+            from { generatePomFileForMavenJavaPublication }
+            rename ".*", "pom.xml"
         }
     }
 }
