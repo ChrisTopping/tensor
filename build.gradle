@@ -30,11 +30,19 @@ test {
 publishing {
     repositories {
         maven {
-            name = "GitHubPackages"
+            name = "github"
             url = "https://maven.pkg.github.com/ChrisTopping/tensor"
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password= System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        register("jar", MavenPublication) {
+            from(components["java"])
+            pom {
+                url.set("https://github.com/ChrisTopping/tensor.git")
             }
         }
     }
