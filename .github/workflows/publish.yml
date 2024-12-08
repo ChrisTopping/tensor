@@ -2,11 +2,16 @@ name: Publish release
 on:
   release:
     type: [created]
+  workflow_dispatch:
 
 jobs:
   publish:
 
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
 
     steps:
     - uses: actions/checkout@v4
