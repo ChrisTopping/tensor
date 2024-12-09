@@ -32,6 +32,7 @@ public class Tensor<T> {
 
     /**
      * Creates a new empty {@code Tensor}
+     *
      * @param <T> the type of values contained in this tensor
      * @return The new tensor
      */
@@ -41,9 +42,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} comprising items of the given type contained in the list
+     *
      * @param list nested list of values
      * @param type type of values
-     * @param <T> the type of values contained in this tensor
+     * @param <T>  the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> of(List<?> list, Class<T> type) {
@@ -61,9 +63,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} comprising items of the given type contained in the list
+     *
      * @param array nested array of values
-     * @param type type of values
-     * @param <T> the type of values contained in this tensor
+     * @param type  type of values
+     * @param <T>   the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> of(Object[] array, Class<T> type) {
@@ -82,9 +85,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} comprising the same uniform provided value for all indices up to the maximum index provided
+     *
      * @param value the value to be set at all indices
      * @param index the maximum index
-     * @param <T> the type of values contained in this tensor
+     * @param <T>   the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> fill(T value, Index index) {
@@ -93,9 +97,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} comprising the same uniform provided value for all indices up to the dimensions provided
-     * @param value the value to be set at all indices
+     *
+     * @param value      the value to be set at all indices
      * @param dimensions the dimensions of the new tensor
-     * @param <T> the type of values contained in this tensor
+     * @param <T>        the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> fill(T value, long... dimensions) {
@@ -105,9 +110,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} comprising the same uniform provided value for all indices up to the dimensions provided
-     * @param value the value to be set at all indices
+     *
+     * @param value      the value to be set at all indices
      * @param dimensions the dimensions of the new tensor
-     * @param <T> the type of values contained in this tensor
+     * @param <T>        the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> fill(T value, int... dimensions) {
@@ -117,9 +123,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} using a generator function
+     *
      * @param generator the generator function
-     * @param index the maximum index
-     * @param <T> the type of values contained in this tensor
+     * @param index     the maximum index
+     * @param <T>       the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> generate(Function<Index, T> generator, Index index) {
@@ -135,9 +142,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} using a generator function
-     * @param generator the generator function
+     *
+     * @param generator  the generator function
      * @param dimensions the dimensions of the new tensor
-     * @param <T> the type of values contained in this tensor
+     * @param <T>        the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> generate(Function<Index, T> generator, long... dimensions) {
@@ -146,9 +154,10 @@ public class Tensor<T> {
 
     /**
      * Creates a new {@code Tensor} using a generator function
-     * @param generator the generator function
+     *
+     * @param generator  the generator function
      * @param dimensions the dimensions of the new tensor
-     * @param <T> the type of values contained in this tensor
+     * @param <T>        the type of values contained in this tensor
      * @return The new tensor
      */
     public static <T> Tensor<T> generate(Function<Index, T> generator, int... dimensions) {
@@ -159,8 +168,9 @@ public class Tensor<T> {
      * Combines same-dimensional tensors
      * If only 1 tensor is provided, the same tensor is returned
      * Else, the resultant tensor will be 1 dimension higher than the provided tensors
+     *
      * @param slices list of tensors to combine
-     * @param <T> type of the tensor element values
+     * @param <T>    type of the tensor element values
      * @return the combined tensor
      */
     public static <T> Tensor<T> combine(List<Tensor<T>> slices) {
@@ -178,8 +188,9 @@ public class Tensor<T> {
      * Combines same-dimensional tensors
      * If only 1 tensor is provided, the same tensor is returned
      * Else, the resultant tensor will be 1 dimension higher than the provided tensors
+     *
      * @param slices array of tensors to combine
-     * @param <T> type of the tensor element values
+     * @param <T>    type of the tensor element values
      * @return the combined tensor
      */
     public static <T> Tensor<T> combine(Tensor<T>[] slices) {
@@ -188,6 +199,7 @@ public class Tensor<T> {
 
     /**
      * Returns the value at a given index
+     *
      * @param index the index at which to return the value
      * @return the value
      */
@@ -197,6 +209,7 @@ public class Tensor<T> {
 
     /**
      * Returns the value at a given set of coordinates
+     *
      * @param coordinates the set of coordinates at which to return the value
      * @return the value
      */
@@ -206,6 +219,7 @@ public class Tensor<T> {
 
     /**
      * Returns the value at a given set of coordinates
+     *
      * @param coordinates the set of coordinates at which to return the value
      * @return the value
      */
@@ -215,8 +229,9 @@ public class Tensor<T> {
 
     /**
      * Sets the value at a given index
+     *
      * @param element the value of the element to be set
-     * @param index the index at which to set the value
+     * @param index   the index at which to set the value
      */
     public void set(T element, Index index) {
         if (!isEmpty() && order() != index.order())
@@ -226,7 +241,8 @@ public class Tensor<T> {
 
     /**
      * Sets the value at a given set of coordinates
-     * @param element the value of the element to be set
+     *
+     * @param element     the value of the element to be set
      * @param coordinates the set of coordinates at which to set the value
      */
     public void set(T element, long... coordinates) {
@@ -235,7 +251,8 @@ public class Tensor<T> {
 
     /**
      * Sets the value at a given set of coordinates
-     * @param element the value of the element to be set
+     *
+     * @param element     the value of the element to be set
      * @param coordinates the set of coordinates at which to set the value
      */
     public void set(T element, int... coordinates) {
@@ -244,6 +261,7 @@ public class Tensor<T> {
 
     /**
      * Returns the number of dimensions (i.e. order) of the tensor
+     *
      * @return the order
      */
     public int order() {
@@ -256,6 +274,7 @@ public class Tensor<T> {
 
     /**
      * Returns the size (i.e. maximum index) within a given dimension
+     *
      * @param dimension the dimension of which to return the size
      * @return the size
      */
@@ -269,6 +288,7 @@ public class Tensor<T> {
 
     /**
      * Returns the sizes (i.e. maximum indices) for all valid dimensions
+     *
      * @return the dimensions
      */
     public List<Long> dimensions() {
@@ -282,6 +302,7 @@ public class Tensor<T> {
      * Returns a new tensor with generically transposed values.</p>
      * Calculates the transposed index of each element and creates a new tensor with all elements at their transposed index.</p>
      * Retains the element size of the original tensor.
+     *
      * @return the transposed tensor
      */
     public Tensor<T> transpose() {
@@ -290,6 +311,7 @@ public class Tensor<T> {
 
     /**
      * Sets all non-present elements in the tensor with the given element value
+     *
      * @param element the value to be back-filled
      */
     public void backfill(T element) {
@@ -298,6 +320,7 @@ public class Tensor<T> {
 
     /**
      * Returns all valid indices contained within the dimensionality of the tensor
+     *
      * @return the list of all valid indices
      */
     public List<Index> indices() {
@@ -306,6 +329,7 @@ public class Tensor<T> {
 
     /**
      * Returns a list all present element values
+     *
      * @return element values
      */
     public List<T> elements() {
@@ -314,8 +338,9 @@ public class Tensor<T> {
 
     /**
      * Creates a new tensor with values calculated using the compute function
+     *
      * @param computeFunction a scalar function applied to the elements of the original tensor to create the values for the new tensor.
-     * @param <S> the parameter type of the new tensor
+     * @param <S>             the parameter type of the new tensor
      * @return the new tensor
      */
     public <S> Tensor<S> compute(Function<T, S> computeFunction) {
@@ -326,8 +351,9 @@ public class Tensor<T> {
 
     /**
      * Creates a new tensor with values calculated using the compute function
+     *
      * @param computeFunction a non-scalar function applied to the elements of the original tensor and their indices to create the values for the new tensor.
-     * @param <S> the parameter type of the new tensor
+     * @param <S>             the parameter type of the new tensor
      * @return the new tensor
      */
     public <S> Tensor<S> computeWithIndices(Function<Map.Entry<Index, T>, S> computeFunction) {
@@ -338,8 +364,9 @@ public class Tensor<T> {
 
     /**
      * Creates a new tensor with values calculated using the compute function. Sets the index of each element based on the compute function.
+     *
      * @param computeFunction a non-scalar function applied to the elements of the original tensor and their indices to create the values for the new tensor.
-     * @param <S> the parameter type of the new tensor
+     * @param <S>             the parameter type of the new tensor
      * @return the new tensor
      */
     public <S> Tensor<S> computeAndUpdateIndices(Function<Map.Entry<Index, T>, Map.Entry<Index, S>> computeFunction) {
@@ -352,14 +379,16 @@ public class Tensor<T> {
 
     /**
      * Applies a piecewise bi-function onto the tensor and another provided tensor
+     *
      * @param piecewiseFunction the function which takes values of two same-dimensioned tensors at each index and returns a new value
-     * @param other the other tensor
-     * @param <U> - the type of the other tensor
-     * @param <S> - the type of the new tensor
+     * @param other             the other tensor
+     * @param <U>               - the type of the other tensor
+     * @param <S>               - the type of the new tensor
      * @return the resultant tensor
      */
     public <S, U> Tensor<S> piecewise(BiFunction<T, U, S> piecewiseFunction, Tensor<U> other) {
-        if (other == null || !dimensions().equals(other.dimensions())) throw new IllegalArgumentException("Tensor dimensions must match");
+        if (other == null || !dimensions().equals(other.dimensions()))
+            throw new IllegalArgumentException("Tensor dimensions must match");
         Map<Index, S> resultMap = map.keySet().stream()
                 .filter(index -> other.get(index) != null)
                 .collect(Collectors.toMap(index -> index, index -> piecewiseFunction.apply(get(index), other.get(index))));
@@ -368,6 +397,7 @@ public class Tensor<T> {
 
     /**
      * Checks if the tensor has any elements.</p>
+     *
      * @return true if the tensor has 0 elements, false if the tensor has 1 or more elements
      */
     public boolean isEmpty() {
@@ -377,6 +407,7 @@ public class Tensor<T> {
     /**
      * Slices the tensor across a given set of constraints
      * Returns a tensor of order (previous order) - (number of constraints)
+     *
      * @param constraints a map of constraints by which to slice the tensor - each constraint locking the sub-tensor to a fixed value in the given dimension
      * @return the sliced tensor
      */
@@ -394,10 +425,11 @@ public class Tensor<T> {
 
     /**
      * Checks all elements to ensure an exact type-match against the given type
+     *
      * @param type the type to be type-matched against
-     * @param <S> the parameter type of the type-casted tensor
-     * @throws IllegalArgumentException if there are any failed type-matches against any of the elements
+     * @param <S>  the parameter type of the type-casted tensor
      * @return the type-casted tensor
+     * @throws IllegalArgumentException if there are any failed type-matches against any of the elements
      */
     public <S> Tensor<S> expect(Class<S> type) {
         if (!elements().stream().allMatch(type::isInstance))
@@ -408,6 +440,7 @@ public class Tensor<T> {
     /**
      * Extrudes the tensor along the next dimension.
      * Spreads this tensor {@code size} times in the higher dimension.
+     *
      * @param size the number of times to spread the tensor
      * @return the extruded tensor of order 1 higher than this tensor
      */
@@ -423,72 +456,112 @@ public class Tensor<T> {
     }
 
     /**
-     * Coerces the tensor to a {@code Matrix}
-     * @throws IllegalStateException if tensor is not of order 2
-     * @return the coerced matrix
-     */
-    public Matrix<T> toMatrix() {
-        if (order() != 2)
-            throw new IllegalStateException("Tensor must be of order 2 to be converted to Matrix");
-        return new Matrix<>(map);
-    }
-
-    /**
-     * Coerces the tensor to a {@code Vector}
-     * @throws IllegalStateException if tensor is not of order 1
-     * @return the coerced vector
-     */
-    public Vector<T> toVector() {
-        if (order() != 1)
-            throw new IllegalStateException("Tensor must be of order 1 to be converted to Vector");
-        return new Vector<>(map);
-    }
-
-    /**
      * Coerces the tensor to a {@code Scalar}
-     * @throws IllegalStateException if tensor is not of order 0
+     *
      * @return the coerced scalar
+     * @throws IllegalStateException if tensor is not of order 0
      */
     public Scalar<T> toScalar() {
         if (order() != 0)
-            throw new IllegalStateException("Tensor must be of order 0 to be converted to Scalar");
+            throw new IllegalStateException("Tensor must be of order 0 to be converted to scalar");
         return new Scalar<>(map);
     }
 
     /**
-     * Converts tensor to string with parameterised representation of non-present values
-     * @param defaultValue parameterised representation of non-present values
+     * Coerces the tensor to a {@code Vector}
+     *
+     * @return the coerced vector
+     * @throws IllegalStateException if tensor is not of order 1
+     */
+    public Vector<T> toVector() {
+        if (order() != 1)
+            throw new IllegalStateException("Tensor must be of order 1 to be converted to vector");
+        return new Vector<>(map);
+    }
+
+    /**
+     * Coerces the tensor to a {@code Matrix}
+     *
+     * @return the coerced matrix
+     * @throws IllegalStateException if tensor is not of order 2
+     */
+    public Matrix<T> toMatrix() {
+        if (order() != 2)
+            throw new IllegalStateException("Tensor must be of order 2 to be converted to matrix");
+        return new Matrix<>(map);
+    }
+
+    /**
+     * Converts tensor to string representation
+     *
      * @return string representation of tensor
      */
-    public String toString(String defaultValue) {
+    @Override
+    public String toString() {
+        return toString("[", "]", ",", "", " ", false);
+    }
+
+    /**
+     * Converts tensor to string representation
+     *</p>
+     * Uses parameterised values to change the formatting of the representation
+     * @param open opening bracketing symbol
+     * @param close closing bracketing symbol
+     * @param separator element separator
+     * @param delineator sub-tensor delineator
+     * @param defaultValue default value for non-present elements
+     * @param repeatedDelineator determines whether the delineator is repeated on nested sub-tensors
+     * @return tensor string representation
+     */
+    public String toString(String open, String close, String separator, String delineator, String defaultValue, boolean repeatedDelineator) {
+        // Handle empty map
+        if (map.isEmpty()) {
+            return "";
+        }
+
+        // Handle scalar value
+        if (order() == 0) {
+            return get().toString();
+        }
+
         List<Index> sortedIndices = indices().stream()
                 .sorted(Index::compareTo)
                 .collect(Collectors.toList());
 
-        // if scalar - print scalar value
-        if (sortedIndices.size() == 0 && map.containsKey(Index.of())) return map.get(Index.of()).toString();
+        int order = sortedIndices.get(sortedIndices.size() - 1)
+                .highestOrderDifference(sortedIndices.get(0));
+        long sizeOfLowestDimension = sortedIndices.get(sortedIndices.size() - 1).get(0);
 
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder().append(open.repeat(order));
+
+        boolean delineatorSurroundedByWhitespace = delineator.matches("\s.\s");
+
         Index previous = null;
         for (Index current : sortedIndices) {
             if (previous != null) {
+                if (previous.get(0) != sizeOfLowestDimension) {
+                    builder.append(separator);
+                }
 
                 int distance = previous.highestOrderDifference(current);
                 if (distance > 1) {
-                    builder.append(" ")
-                            .append("|".repeat(distance - 1));
+
+                    builder.append(close.repeat(Math.max(distance - 1, 0)))
+                            .append(delineatorSurroundedByWhitespace ? " " : "")
+                            .append(repeatedDelineator ? delineator.trim().repeat(Math.max(distance - 1, 0)) : delineator)
+                            .append(delineatorSurroundedByWhitespace ? " " : "")
+                            .append(open.repeat(Math.max(distance - 1, 0)));
                 }
+
             }
             T element = map.get(current);
-            builder.append(" ").append(element == null ? defaultValue : element);
+            builder.append(element == null ? defaultValue : element);
+
             previous = current;
         }
-        return builder.toString().trim();
-    }
 
-    @Override
-    public String toString() {
-        return toString(" ");
+        return builder.append(close.repeat(order))
+                .toString();
     }
 
     @Override

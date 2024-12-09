@@ -1,14 +1,13 @@
 package dev.christopping.tensor;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static dev.christopping.tensor.TensorAssertions.assertTensor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -16,10 +15,6 @@ class TensorTest {
 
     private static final Integer[][] INT_ARRAY_2D = {{1, 2}, {3, 4}, {5, 6}};
     private static final Integer[][][] INT_ARRAY_3D = {{{1, 2}, {3, 4}, {5, 6}}, {{10, 20}, {30, 40}, {50, 60}}};
-
-    private <T> void assertTensor(Tensor<T> tensor, String string) {
-        assertThat(tensor.toString()).isEqualTo(string);
-    }
 
     @DisplayName("empty()")
     @Nested
@@ -1121,7 +1116,7 @@ class TensorTest {
             Matrix<String> matrix = Tensor.fill("123", 2, 2).toMatrix();
             assertThat(matrix).isInstanceOf(Matrix.class);
             assertThat(matrix.order()).isEqualTo(2);
-            assertThat(matrix).hasToString("123 123 | 123 123");
+            assertThat(matrix).hasToString("[[123,123][123,123]]");
 
         }
 
@@ -1155,7 +1150,7 @@ class TensorTest {
             Vector<String> vector = Tensor.fill("123", 2).toVector();
             assertThat(vector).isInstanceOf(Vector.class);
             assertThat(vector.order()).isEqualTo(1);
-            assertThat(vector).hasToString("123 123");
+            assertThat(vector).hasToString("[123,123]");
         }
 
         @DisplayName("Given matrix - should throw error")
@@ -1214,19 +1209,50 @@ class TensorTest {
 
     }
 
-    @DisplayName("toString(String defaultValue")
     @Nested
-    class ToStringWithDefaultValue {
-        @DisplayName("Given 3D sparse tensor - should return tensor as strings with default value")
-        @Test
-        void given3DSparseTensor_shouldReturnTensorAsStringsWithDefaultValue() {
-            Tensor<Integer> tensor = Tensor.empty();
+    @DisplayName("toString(ope, close, separator, delineator, defaultValue)")
+    class ToStringParameterised {
+
+        private static final Tensor<Integer> tensor = Tensor.empty();
+
+        @BeforeAll
+        static void setUpTensor() {
             tensor.set(1, 0, 0, 0);
             tensor.set(2, 0, 1, 0);
             tensor.set(3, 1, 0, 1);
-            tensor.set(4, 1, 2, 1);
-            assertThat(tensor.toString("x")).isEqualTo("1 x | 2 x | x x || x 3 | x x | x 4");
+            tensor.set(4, 1, 1, 0);
         }
+
+        @Test
+        @DisplayName("Should set open symbol")
+        void shouldSetOpenSymbol() {
+            assertThat(tensor.toString("<", "]", ",", "", " ", false)).isEqualTo("<<<1, ]<2,4]]<< ,3]< , ]]]");
+        }
+
+        @Test
+        @DisplayName("Should set close symbol")
+        void shouldSetCloseSymbol() {
+            assertThat(tensor.toString("[", ">", ",", "", " ", false)).isEqualTo("[[[1, >[2,4>>[[ ,3>[ , >>>");
+        }
+
+        @Test
+        @DisplayName("Should set separator")
+        void shouldSetSeparator() {
+            assertThat(tensor.toString("[", "]", " - ", "", " ", false)).isEqualTo("[[[1 -  ][2 - 4]][[  - 3][  -  ]]]");
+        }
+
+        @Test
+        @DisplayName("Should set delineator")
+        void shouldSetDelineator() {
+            assertThat(tensor.toString("[", "]", ",", "~", " ", false)).isEqualTo("[[[1, ]~[2,4]]~[[ ,3]~[ , ]]]");
+        }
+
+        @Test
+        @DisplayName("Should set default value")
+        void shouldSetDefaultValue() {
+            assertThat(tensor.toString("[", "]", ",", ",", "x", false)).isEqualTo("[[[1,x],[2,4]],[[x,3],[x,x]]]");
+        }
+
     }
 
     @DisplayName("toString()")
@@ -1254,7 +1280,7 @@ class TensorTest {
             tensor.set(1, 0, 0);
             tensor.set(2, 1, 0);
             tensor.set(3, 2, 0);
-            assertThat(tensor.toString()).isEqualTo("1 2 3");
+            assertThat(tensor.toString()).isEqualTo("[1,2,3]");
         }
 
         @DisplayName("Given vertical vector - should return pipe separated values as strings")
@@ -1264,21 +1290,21 @@ class TensorTest {
             tensor.set(1, 0, 0);
             tensor.set(2, 0, 1);
             tensor.set(3, 0, 2);
-            assertThat(tensor.toString()).isEqualTo("1 | 2 | 3");
+            assertThat(tensor.toString()).isEqualTo("[[1][2][3]]");
         }
 
         @DisplayName("Given matrix - should return matrix as strings")
         @Test
         void givenMatrix_shouldReturnMatrixAsStrings() {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
-            assertThat(tensor.toString()).isEqualTo("1 2 | 3 4 | 5 6");
+            assertThat(tensor.toString()).isEqualTo("[[1,2][3,4][5,6]]");
         }
 
         @DisplayName("Given 3D tensor - should return tensor as strings")
         @Test
         void given3DTensor_shouldReturnTensorAsStrings() {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
-            assertThat(tensor.toString()).isEqualTo("1 2 | 3 4 | 5 6 || 10 20 | 30 40 | 50 60");
+            assertThat(tensor.toString()).isEqualTo("[[[1,2][3,4][5,6]][[10,20][30,40][50,60]]]");
         }
 
         @DisplayName("Given 3D sparse tensor - should return tensor as strings")
@@ -1289,7 +1315,7 @@ class TensorTest {
             tensor.set(2, 0, 1, 0);
             tensor.set(3, 1, 0, 1);
             tensor.set(4, 1, 1, 0);
-            assertThat(tensor.toString()).isEqualTo("1   | 2 4 ||   3 |");
+            assertThat(tensor.toString()).isEqualTo("[[[1, ][2,4]][[ ,3][ , ]]]");
         }
 
     }
