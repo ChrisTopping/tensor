@@ -142,18 +142,7 @@ public class Matrix<T> extends Tensor<T> {
     }
 
     public String toFormattedString() {
-        StringBuilder builder = new StringBuilder();
-        long width = width();
-        long height = height();
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                T value = map.getOrDefault(Index.of(x, y), null);
-                builder.append(value != null ? value.toString() : " ");
-                if (x + 1 < width) builder.append(" ");
-            }
-            builder.append("\n");
-        }
-        return builder.toString().trim();
+        return toString("[", "]", ",", "\n", "x", false);
     }
 
     public Tensor<T> toTensor() {
