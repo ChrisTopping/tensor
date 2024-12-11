@@ -15,10 +15,10 @@ Tensor package for Java
 - [ ] Test all Matrix.java methods
 - [ ] Add static factory method for Tensor.java that accepts arrays of dynamic order
 - [ ] Add Tensor.reduce() method
-- [ ] Add Minkowski distance method
-- [ ] Add Manhattan distance method
-- [ ] Add Hamming distance
-- [ ] Add Chebyshev distance
+- [x] Add Minkowski distance method
+- [x] Add Manhattan distance method
+- [x] Add Hamming distance
+- [x] Add Chebyshev distance
 - [ ] Add common operations functionality
 - [ ] Add bi-function operation method
 - [ ] Standardise naming

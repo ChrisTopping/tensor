@@ -135,7 +135,7 @@ public class Tensor<T> {
         if (index.isEmpty()) {
             tensor.set(generator.apply(Index.of()), Index.of());
         } else {
-            Index.indices(index).forEach(i -> tensor.set(generator.apply(i), i));
+            Index.range(index).forEach(i -> tensor.set(generator.apply(i), i));
         }
         return tensor;
     }
@@ -207,6 +207,10 @@ public class Tensor<T> {
         return map.get(index);
     }
 
+    public T getOrDefault(T defaultValue, Index index) {
+        return map.getOrDefault(index, defaultValue);
+    }
+
     /**
      * Returns the value at a given set of coordinates
      *
@@ -217,6 +221,10 @@ public class Tensor<T> {
         return get(Index.of(coordinates));
     }
 
+    public T getOrDefault(T defaultValue, long... coordinates) {
+        return getOrDefault(defaultValue, Index.of(coordinates));
+    }
+
     /**
      * Returns the value at a given set of coordinates
      *
@@ -225,6 +233,10 @@ public class Tensor<T> {
      */
     public T get(int... coordinates) {
         return get(Index.of(coordinates));
+    }
+
+    public T getOrDefault(T defaultValue, int... coordinates) {
+        return getOrDefault(defaultValue, Index.of(coordinates));
     }
 
     /**
@@ -239,6 +251,12 @@ public class Tensor<T> {
         map.put(index, element);
     }
 
+    public void setIfAbsent(T element, Index index) {
+        if (!isEmpty() && order() != index.order())
+            throw new IllegalArgumentException("Index order should be equal to tensor order");
+        map.putIfAbsent(index, element);
+    }
+
     /**
      * Sets the value at a given set of coordinates
      *
@@ -247,6 +265,10 @@ public class Tensor<T> {
      */
     public void set(T element, long... coordinates) {
         set(element, Index.of(coordinates));
+    }
+
+    public void setIfAbsent(T element, long... coordinates) {
+        setIfAbsent(element, Index.of(coordinates));
     }
 
     /**
@@ -259,6 +281,10 @@ public class Tensor<T> {
         set(element, Index.of(coordinates));
     }
 
+    public void setIfAbsent(T element, int... coordinates) {
+        setIfAbsent(element, Index.of(coordinates));
+    }
+
     /**
      * Returns the number of dimensions (i.e. order) of the tensor
      *
@@ -267,8 +293,7 @@ public class Tensor<T> {
     public int order() {
         return map.keySet().stream()
                 .findFirst()
-                .map(Index::coordinates)
-                .map(List::size)
+                .map(Index::order)
                 .orElse(0);
     }
 
@@ -280,8 +305,8 @@ public class Tensor<T> {
      */
     public long size(int dimension) {
         return map.keySet().stream()
-                .filter(index -> index.coordinates().size() > dimension)
-                .mapToLong(index -> index.coordinates().get(dimension))
+                .filter(index -> index.order() > dimension)
+                .mapToLong(index -> index.get(dimension))
                 .max()
                 .orElse(-1) + 1;
     }
@@ -324,7 +349,7 @@ public class Tensor<T> {
      * @return the list of all valid indices
      */
     public List<Index> indices() {
-        return Index.indices(Index.of(dimensions()).compute(coordinate -> coordinate - 1));
+        return Index.range(Index.of(dimensions()).compute(coordinate -> coordinate - 1));
     }
 
     /**
@@ -491,6 +516,10 @@ public class Tensor<T> {
         return new Matrix<>(map);
     }
 
+    public Tensor<T> toTensor() {
+        return new Tensor<>(map);
+    }
+
     /**
      * Converts tensor to string representation
      *
@@ -503,13 +532,14 @@ public class Tensor<T> {
 
     /**
      * Converts tensor to string representation
-     *</p>
+     * </p>
      * Uses parameterised values to change the formatting of the representation
-     * @param open opening bracketing symbol
-     * @param close closing bracketing symbol
-     * @param separator element separator
-     * @param delineator sub-tensor delineator
-     * @param defaultValue default value for non-present elements
+     *
+     * @param open               opening bracketing symbol
+     * @param close              closing bracketing symbol
+     * @param separator          element separator
+     * @param delineator         sub-tensor delineator
+     * @param defaultValue       default value for non-present elements
      * @param repeatedDelineator determines whether the delineator is repeated on nested sub-tensors
      * @return tensor string representation
      */

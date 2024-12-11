@@ -143,7 +143,7 @@ class TensorTest {
         @DisplayName("Given negative vararg - should throw error")
         @Test
         void givenNegativeVararg_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", Index.of(-1L))).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Tensor.fill("123", Index.of(-1L))).isInstanceOf(IndexOutOfBoundsException.class);
         }
 
         @DisplayName("Given 1 vararg - should return tensor with vector value")
@@ -191,13 +191,13 @@ class TensorTest {
         @DisplayName("Given negative vararg - should throw error")
         @Test
         void givenNegativeVararg_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", -1L)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Tensor.fill("123", -1L)).isInstanceOf(IndexOutOfBoundsException.class);
         }
 
         @DisplayName("Given 0-valued vararg - should throw error")
         @Test
         void given0ValuedVararg_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 0L)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Tensor.fill("123", 0L)).isInstanceOf(IndexOutOfBoundsException.class);
         }
 
         @DisplayName("Given 1 vararg - should return tensor with vector value")
@@ -236,13 +236,13 @@ class TensorTest {
         @DisplayName("Given negative vararg - should throw error")
         @Test
         void givenNegativeVararg_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", -1)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Tensor.fill("123", -1)).isInstanceOf(IndexOutOfBoundsException.class);
         }
 
         @DisplayName("Given 0-valued vararg - should throw error")
         @Test
         void given0ValuedVararg_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 0)).isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> Tensor.fill("123", 0)).isInstanceOf(IndexOutOfBoundsException.class);
         }
 
         @DisplayName("Given 1 vararg - should return tensor with vector value")
@@ -853,7 +853,7 @@ class TensorTest {
         @Test
         void givenEmpty_nullOp() {
             Tensor<Integer> empty = Tensor.empty();
-            Tensor<String> computed = empty.computeWithIndices(entry -> "" + entry.getKey().coordinates().get(0) + entry.getKey().coordinates().get(1) + entry.getValue());
+            Tensor<String> computed = empty.computeWithIndices(entry -> "" + entry.getKey().get(0) + entry.getKey().get(1) + entry.getValue());
 
             assertThat(computed).isEqualTo(Tensor.empty());
         }
@@ -862,7 +862,7 @@ class TensorTest {
         @Test
         void givenPopulatedIntegerTensor_shouldApplyComputeFunction() {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
-            Tensor<String> computed = tensor.computeWithIndices(entry -> "" + entry.getKey().coordinates().get(0) + entry.getKey().coordinates().get(1) + entry.getValue());
+            Tensor<String> computed = tensor.computeWithIndices(entry -> "" + entry.getKey().get(0) + entry.getKey().get(1) + entry.getValue());
 
             String[][] negativeIntArray = {{"001", "102"}, {"013", "114"}, {"025", "126"}};
             assertThat(computed).isEqualTo(Tensor.of(negativeIntArray, String.class));
@@ -883,7 +883,7 @@ class TensorTest {
 
             Function<Map.Entry<Index, Integer>, Map.Entry<Index, Integer>> computeFunction = entry ->
                     Map.entry(
-                            Index.of(entry.getKey().coordinates().get(0) * 2, entry.getKey().coordinates().get(1) * 2),
+                            Index.of(entry.getKey().get(0) * 2, entry.getKey().get(1) * 2),
                             entry.getValue() * 4
                     );
             Tensor<Integer> computed = empty.computeAndUpdateIndices(computeFunction);
@@ -898,7 +898,7 @@ class TensorTest {
 
             Function<Map.Entry<Index, Integer>, Map.Entry<Index, Integer>> computeFunction = entry ->
                     Map.entry(
-                            Index.of(entry.getKey().coordinates().get(0) * 2, entry.getKey().coordinates().get(1) * 2),
+                            Index.of(entry.getKey().get(0) * 2, entry.getKey().get(1) * 2),
                             entry.getValue() * 4
                     );
 

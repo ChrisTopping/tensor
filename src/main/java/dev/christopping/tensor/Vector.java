@@ -30,7 +30,7 @@ public class Vector<T> extends Tensor<T> {
     }
 
     public static <T> Vector<T> fill(T value, long size) {
-        if (size < 0) throw new IllegalArgumentException("Size must both be positive");
+        if (size < 0) throw new IndexOutOfBoundsException("Size must be positive");
         return Tensor.fill(value, size).toVector();
     }
 

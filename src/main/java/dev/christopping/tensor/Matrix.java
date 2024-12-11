@@ -1,5 +1,6 @@
 package dev.christopping.tensor;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -68,7 +69,7 @@ public class Matrix<T> extends Tensor<T> {
             throw new IllegalArgumentException("Index exceeds matrix size in given dimension");
 
         return map.entrySet().stream()
-                .filter(entry -> entry.getKey().coordinates().get(dimension).equals(index))
+                .filter(entry -> entry.getKey().get(dimension) == index)
                 .sorted(Map.Entry.comparingByKey())
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
@@ -96,7 +97,9 @@ public class Matrix<T> extends Tensor<T> {
     public void insertColumn(List<T> column, long x) {
         Map<Index, T> shiftedMap = map.entrySet().stream()
                 .map(entry -> {
-                    List<Long> coordinates = entry.getKey().coordinates();
+                    List<Long> coordinates = Arrays.stream(entry.getKey().coordinates())
+                            .boxed()
+                            .collect(Collectors.toList());
                     long columnIndex = coordinates.get(0);
                     if (columnIndex >= x) {
                         coordinates.set(0, columnIndex + 1L);
@@ -120,7 +123,9 @@ public class Matrix<T> extends Tensor<T> {
     public void insertRow(List<T> row, long y) {
         Map<Index, T> shiftedMap = map.entrySet().stream()
                 .map(entry -> {
-                    List<Long> coordinates = entry.getKey().coordinates();
+                    List<Long> coordinates = Arrays.stream(entry.getKey().coordinates())
+                            .boxed()
+                            .collect(Collectors.toList());
                     long rowIndex = coordinates.get(1);
                     if (rowIndex >= y) {
                         coordinates.set(1, rowIndex + 1L);
@@ -143,9 +148,5 @@ public class Matrix<T> extends Tensor<T> {
 
     public String toFormattedString() {
         return toString("[", "]", ",", "\n", "x", false);
-    }
-
-    public Tensor<T> toTensor() {
-        return new Tensor<>(map);
     }
 }
