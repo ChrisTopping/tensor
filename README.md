@@ -26,3 +26,8 @@ Tensor package for Java
 - [ ] Cache order, dimensions
 - [x] Sub-tensor
 - [x] Add matrix multiplication
+- [ ] Improve CI/CD
+  - [ ] Workflow for creating new releases
+  - [ ] Auto version increment
+  - [ ] Maven repo publishing
+  - [ ] Coverage metrics
