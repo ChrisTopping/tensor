@@ -3,6 +3,8 @@ package dev.christopping.tensor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -44,10 +46,6 @@ public class Matrix<T> extends Tensor<T> {
 
     public static <T> Matrix<T> fill(T value, int x, int y) {
         return fill(value, x, (long) y);
-    }
-
-    public static <T> Matrix<T> empty() {
-        return new Matrix<>();
     }
 
     @Override
@@ -146,7 +144,53 @@ public class Matrix<T> extends Tensor<T> {
         insertRow(row, height());
     }
 
-    public String toFormattedString() {
-        return toString("[", "]", ",", "\n", "x", false);
+    @Override
+    public Matrix<T> backfill(T element) {
+        return new Matrix<>(map);
     }
+
+    @Override
+    public Matrix<T> transpose() {
+        return new Matrix<T>(map);
+    }
+
+    @Override
+    public <S> Matrix<S> compute(Function<T, S> computeFunction) {
+        return super.compute(computeFunction).toMatrix();
+    }
+
+    @Override
+    public <S> Matrix<S> computeWithIndices(Function<Map.Entry<Index, T>, S> computeFunction) {
+        return super.computeWithIndices(computeFunction).toMatrix();
+    }
+
+    @Override
+    public <S, U> Matrix<S> piecewise(BiFunction<T, U, S> piecewiseFunction, Tensor<U> other) {
+        return super.piecewise(piecewiseFunction, other).toMatrix();
+    }
+
+    @Override
+    public Matrix<T> slice(Map<Integer, Long> constraints) {
+        return super.slice(constraints).toMatrix();
+    }
+
+    @Override
+    public <S> Matrix<S> expect(Class<S> type) {
+        return super.expect(type).toMatrix();
+    }
+
+    @Override
+    public Matrix<T> extract(Index min, Index max) {
+        return super.extract(min, max).toMatrix();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Matrix<?> matrix = (Matrix<?>) o;
+
+        return map == matrix.map || (map.equals(matrix.map));
+    }
+
 }
