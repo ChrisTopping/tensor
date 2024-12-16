@@ -52,6 +52,16 @@ public record Index(long[] coordinates) implements Comparable<Index> {
         return of(coordinatesArray);
     }
 
+    public static Index fill(int theOrder, int value) {
+        int[] zeros = new int[theOrder];
+        Arrays.fill(zeros, value);
+        return Index.of(zeros);
+    }
+
+    public static Index zeros(int order) {
+        return fill(order, 0);
+    }
+
     /**
      * Creates a complete list of valid indices for a given dimension based on a maximum index coordinate
      * </p>
@@ -113,13 +123,23 @@ public record Index(long[] coordinates) implements Comparable<Index> {
     }
 
     /**
-     * Checks if this tensor is a zero tensor.
-     * A zero tensor is defined as a tensor where all components are zero.
+     * Checks if this index is a zero index.
+     * A zero index is defined as an index where all elements are zero.
      *
      * @return {@code true} if all components of the tensor are zero, {@code false} otherwise.
      */
     public boolean isZeroTensor() {
         return Arrays.stream(coordinates).allMatch(value -> value == 0);
+    }
+
+    public boolean isIdentityIndex() {
+        if (order() == 0) {
+            return true;
+        } else {
+            long first = get(0);
+            return Arrays.stream(coordinates).allMatch(value -> value == first);
+        }
+
     }
 
     /**
@@ -302,6 +322,9 @@ public record Index(long[] coordinates) implements Comparable<Index> {
     }
 
     private void assertSimilar(Index other) {
+        if (null == other) {
+            throw new IllegalArgumentException("Index must not be null");
+        }
         if (!isSimilar(other)) {
             throw new IllegalArgumentException("Indices must have the same dimensionality");
         }
@@ -318,6 +341,22 @@ public record Index(long[] coordinates) implements Comparable<Index> {
                         Arrays.stream(this.coordinates).boxed(),
                         Arrays.stream(other.coordinates).boxed()
                 ).mapToLong(Long::longValue)
+                .toArray();
+        return Index.of(newCoordinates);
+    }
+
+    public Index add(Index other) {
+        assertSimilar(other);
+        long[] newCoordinates = IntStream.range(0, order())
+                .mapToLong(i -> get(i) + other.get(i))
+                .toArray();
+        return Index.of(newCoordinates);
+    }
+
+    public Index subtract(Index other) {
+        assertSimilar(other);
+        long[] newCoordinates = IntStream.range(0, order())
+                .mapToLong(i -> get(i) - other.get(i))
                 .toArray();
         return Index.of(newCoordinates);
     }
@@ -426,6 +465,32 @@ public record Index(long[] coordinates) implements Comparable<Index> {
                 .map(index -> index + 1)
                 .findFirst()
                 .orElse(0);
+    }
+
+    public boolean isWithinBounds(Index min, Index max) {
+        Objects.requireNonNull(min, "Minimum index cannot be null");
+        Objects.requireNonNull(max, "Maximum index cannot be null");
+
+        int order = order();
+        if (order != min.order() || order != max.order()) {
+            return false; // Dimension mismatch
+        }
+
+        long[] coords = coordinates();
+        long[] minCoords = min.coordinates();
+        long[] maxCoords = max.coordinates();
+
+        for (int d = 0; d < order; d++) {
+            long coord = coords[d];
+            if (coord < minCoords[d] || coord > maxCoords[d]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isWithinBounds(Index max) {
+        return isWithinBounds(Index.zeros(order()), max);
     }
 
     @Override

@@ -2,6 +2,7 @@ package dev.christopping.tensor;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -79,7 +80,6 @@ public class Tensor<T> {
         } else {
             List<Tensor<T>> slices = Arrays.stream(array).map(sublist -> of((Object[]) sublist, type)).collect(Collectors.toList());
             return Tensor.combine(slices);
-
         }
     }
 
@@ -87,12 +87,12 @@ public class Tensor<T> {
      * Creates a new {@code Tensor} comprising the same uniform provided value for all indices up to the maximum index provided
      *
      * @param value the value to be set at all indices
-     * @param index the maximum index
+     * @param shape the shape index of the resultant tensor
      * @param <T>   the type of values contained in this tensor
      * @return The new tensor
      */
-    public static <T> Tensor<T> fill(T value, Index index) {
-        return generate(i -> value, index);
+    public static <T> Tensor<T> fill(T value, Index shape) {
+        return generate(i -> value, shape);
     }
 
     /**
@@ -104,9 +104,8 @@ public class Tensor<T> {
      * @return The new tensor
      */
     public static <T> Tensor<T> fill(T value, long... dimensions) {
-        return fill(value, Index.of(dimensions).compute(dimension -> dimension - 1));
+        return fill(value, Index.of(dimensions).compute(dimension -> Math.max(dimension - 1, 0)));
     }
-
 
     /**
      * Creates a new {@code Tensor} comprising the same uniform provided value for all indices up to the dimensions provided
@@ -117,25 +116,29 @@ public class Tensor<T> {
      * @return The new tensor
      */
     public static <T> Tensor<T> fill(T value, int... dimensions) {
-        Index compute = Index.of(dimensions).compute(dimension -> dimension - 1);
+        Index compute = Index.of(dimensions).compute(dimension -> Math.max(dimension - 1, 0));
         return fill(value, compute);
+    }
+
+    public static Tensor<Integer> identity(Index shape) {
+        return Tensor.generate(index -> index.isIdentityIndex() ? 1 : 0, shape);
     }
 
     /**
      * Creates a new {@code Tensor} using a generator function
      *
      * @param generator the generator function
-     * @param index     the maximum index
+     * @param shape     the shape index of the resultant tensor
      * @param <T>       the type of values contained in this tensor
      * @return The new tensor
      */
-    public static <T> Tensor<T> generate(Function<Index, T> generator, Index index) {
+    public static <T> Tensor<T> generate(Function<Index, T> generator, Index shape) {
         if (null == generator) throw new IllegalArgumentException("Generator function must not be null");
         Tensor<T> tensor = new Tensor<>();
-        if (index.isEmpty()) {
+        if (shape.isEmpty()) {
             tensor.set(generator.apply(Index.of()), Index.of());
         } else {
-            Index.range(index).forEach(i -> tensor.set(generator.apply(i), i));
+            Index.range(shape).forEach(i -> tensor.set(generator.apply(i), i));
         }
         return tensor;
     }
@@ -285,6 +288,10 @@ public class Tensor<T> {
         setIfAbsent(element, Index.of(coordinates));
     }
 
+    public void remove(Index index) {
+        map.remove(index);
+    }
+
     /**
      * Returns the number of dimensions (i.e. order) of the tensor
      *
@@ -324,32 +331,16 @@ public class Tensor<T> {
     }
 
     /**
-     * Returns a new tensor with generically transposed values.</p>
-     * Calculates the transposed index of each element and creates a new tensor with all elements at their transposed index.</p>
-     * Retains the element size of the original tensor.
-     *
-     * @return the transposed tensor
-     */
-    public Tensor<T> transpose() {
-        return computeAndUpdateIndices(entry -> Map.entry(entry.getKey().transpose(), entry.getValue()));
-    }
-
-    /**
-     * Sets all non-present elements in the tensor with the given element value
-     *
-     * @param element the value to be back-filled
-     */
-    public void backfill(T element) {
-        indices().forEach(index -> map.putIfAbsent(index, element));
-    }
-
-    /**
      * Returns all valid indices contained within the dimensionality of the tensor
      *
      * @return the list of all valid indices
      */
     public List<Index> indices() {
-        return Index.range(Index.of(dimensions()).compute(coordinate -> coordinate - 1));
+        return Index.range(Index.of(dimensions()).compute(coordinate -> Math.max(coordinate - 1, 0)));
+    }
+
+    public boolean contains(T value) {
+        return map.containsValue(value);
     }
 
     /**
@@ -358,7 +349,65 @@ public class Tensor<T> {
      * @return element values
      */
     public List<T> elements() {
-        return new ArrayList<>(map.values());
+        return map.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    public Vector<T> flatten(T defaultValue) {
+        return Vector.of(backfill(defaultValue).elements());
+    }
+
+    /**
+     * Checks if the tensor has any elements.</p>
+     *
+     * @return true if the tensor has 0 elements, false if the tensor has 1 or more elements
+     */
+    public boolean isEmpty() {
+        return map.isEmpty();
+    }
+
+    /**
+     * Checks all elements to ensure an exact type-match against the given type
+     *
+     * @param type the type to be type-matched against
+     * @param <S>  the parameter type of the type-casted tensor
+     * @return the type-casted tensor
+     * @throws IllegalArgumentException if there are any failed type-matches against any of the elements
+     */
+    public <S> Tensor<S> expect(Class<S> type) {
+        if (!elements().stream().allMatch(type::isInstance))
+            throw new IllegalArgumentException("Tensor cannot be expected to be of given type");
+        return (Tensor<S>) this;
+    }
+
+    /**
+     * Returns a copy of the original tensor where all non-present elements in the tensor are set to the provided element value
+     *
+     * @param element the value to be back-filled
+     */
+    public Tensor<T> backfill(T element) {
+        List<Index> indices = indices();
+
+        if (indices.isEmpty()) {
+            return new Tensor<>(map);
+        }
+
+        Map<Index, T> backfilledMap = indices.stream()
+                .collect(Collectors.toMap(index -> index, index -> map.getOrDefault(index, element)));
+        return new Tensor<>(backfilledMap);
+    }
+
+    /**
+     * Returns a new tensor with generically transposed values.</p>
+     * Calculates the transposed index of each element and creates a new tensor with all elements at their transposed index.</p>
+     * Retains the element size of the original tensor.
+     *
+     * @return the transposed tensor
+     */
+    public Tensor<T> transpose() {
+        return computeAndUpdateIndices(entry -> Map.entry(entry.getKey().transpose(), entry.getValue()));
     }
 
     /**
@@ -402,6 +451,46 @@ public class Tensor<T> {
         return new Tensor<>(map);
     }
 
+    public Tensor<T> reduce(T identity, BinaryOperator<T> accumulator, int dimension) {
+        if (dimension > order() - 1) {
+            throw new IndexOutOfBoundsException("Specified dimension greater than order of tensor");
+        }
+
+        Map<Index, T> reduced = map.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.groupingBy(e -> e.getKey().constrain(dimension)))
+                .values().stream()
+                .collect(Collectors.toMap(
+                        e -> e.get(0).getKey().constrain(dimension),
+                        e -> e.stream().map(Map.Entry::getValue).reduce(identity, accumulator)
+                ));
+
+        return new Tensor<>(reduced);
+    }
+
+    public <S> Tensor<S> reduce(S identity, BiFunction<S, T, S> accumulator, BinaryOperator<S> combiner, int dimension) {
+        if (dimension >= order()) {
+            throw new IndexOutOfBoundsException("Specified dimension greater than order of tensor");
+        }
+
+        Map<Index, S> reduced = map.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.groupingBy(e -> e.getKey().constrain(dimension)))
+                .values().stream()
+                .collect(Collectors.toMap(
+                        e -> e.get(0).getKey().constrain(dimension),
+                        e -> {
+                            List<T> t = e.stream().map(Map.Entry::getValue).collect(Collectors.toList());
+                            return t.stream().reduce(identity, accumulator, combiner);
+                        }));
+
+        return new Tensor<>(reduced);
+    }
+
+    public Tensor<T> mask(Tensor<Boolean> mask, T maskedValue) {
+        return piecewise((element, o) -> ((Boolean.TRUE.equals(o)) ? element : maskedValue), mask);
+    }
+
     /**
      * Applies a piecewise bi-function onto the tensor and another provided tensor
      *
@@ -418,15 +507,6 @@ public class Tensor<T> {
                 .filter(index -> other.get(index) != null)
                 .collect(Collectors.toMap(index -> index, index -> piecewiseFunction.apply(get(index), other.get(index))));
         return new Tensor<>(resultMap);
-    }
-
-    /**
-     * Checks if the tensor has any elements.</p>
-     *
-     * @return true if the tensor has 0 elements, false if the tensor has 1 or more elements
-     */
-    public boolean isEmpty() {
-        return map.isEmpty();
     }
 
     /**
@@ -449,20 +529,6 @@ public class Tensor<T> {
     }
 
     /**
-     * Checks all elements to ensure an exact type-match against the given type
-     *
-     * @param type the type to be type-matched against
-     * @param <S>  the parameter type of the type-casted tensor
-     * @return the type-casted tensor
-     * @throws IllegalArgumentException if there are any failed type-matches against any of the elements
-     */
-    public <S> Tensor<S> expect(Class<S> type) {
-        if (!elements().stream().allMatch(type::isInstance))
-            throw new IllegalArgumentException("Tensor cannot be expected to be of given type");
-        return (Tensor<S>) this;
-    }
-
-    /**
      * Extrudes the tensor along the next dimension.
      * Spreads this tensor {@code size} times in the higher dimension.
      *
@@ -471,13 +537,35 @@ public class Tensor<T> {
      */
     public Tensor<T> extrude(long size) {
         Map<Index, T> extrudedMap = map.entrySet().stream()
-                .map(entry -> {
-                    return LongStream.range(0, size)
-                            .mapToObj(coordinate -> Map.entry(entry.getKey().extrude(coordinate), entry.getValue()))
-                            .collect(Collectors.toList());
-                }).flatMap(Collection::stream)
+                .map(entry -> LongStream.range(0, size)
+                        .mapToObj(coordinate -> Map.entry(entry.getKey().extrude(coordinate), entry.getValue()))
+                        .collect(Collectors.toList())
+                ).flatMap(Collection::stream)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new Tensor<>(extrudedMap);
+    }
+
+    public Tensor<T> extract(Index min, Index max) {
+        if (min.order() != max.order()) {
+            throw new IllegalArgumentException("Min and max must have the same number of dimensions.");
+        }
+        if (!min.isWithinBounds(max)) {
+            throw new IllegalArgumentException("Min must be bounded by max");
+        }
+
+        // Directly use min and max as boundaries, treating 'max' as an upper bound, not a range
+        Map<Index, T> extractedMap = map.entrySet().stream()
+                .filter(entry -> entry.getKey().isWithinBounds(min, max))
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().subtract(min),
+                        Map.Entry::getValue
+                ));
+
+        return new Tensor<>(extractedMap);
+    }
+
+    public boolean isScalar() {
+        return order() == 0;
     }
 
     /**
@@ -488,8 +576,12 @@ public class Tensor<T> {
      */
     public Scalar<T> toScalar() {
         if (order() != 0)
-            throw new IllegalStateException("Tensor must be of order 0 to be converted to scalar");
+            throw new IllegalStateException("Tensor must have an order of 0 to be converted to a Scalar");
         return new Scalar<>(map);
+    }
+
+    public boolean isVector() {
+        return order() == 1;
     }
 
     /**
@@ -499,9 +591,17 @@ public class Tensor<T> {
      * @throws IllegalStateException if tensor is not of order 1
      */
     public Vector<T> toVector() {
-        if (order() != 1)
-            throw new IllegalStateException("Tensor must be of order 1 to be converted to vector");
-        return new Vector<>(map);
+        if (order() > 1) {
+            throw new IllegalStateException("Tensor must have an order of 1 to be converted to a Vector");
+        } else if (isScalar()) {
+            return Vector.of(elements());
+        } else {
+            return new Vector<>(map);
+        }
+    }
+
+    public boolean isMatrix() {
+        return order() == 2;
     }
 
     /**
@@ -511,8 +611,8 @@ public class Tensor<T> {
      * @throws IllegalStateException if tensor is not of order 2
      */
     public Matrix<T> toMatrix() {
-        if (order() != 2)
-            throw new IllegalStateException("Tensor must be of order 2 to be converted to matrix");
+        if (order() > 2)
+            throw new IllegalStateException("Tensor must have an order of 2 to be converted to a Matrix");
         return new Matrix<>(map);
     }
 
@@ -566,6 +666,8 @@ public class Tensor<T> {
 
         boolean delineatorSurroundedByWhitespace = delineator.matches("\s.\s");
 
+        String normalisedDelineator = delineator.trim().length() == 0 ? delineator : delineator.trim();
+
         Index previous = null;
         for (Index current : sortedIndices) {
             if (previous != null) {
@@ -575,10 +677,9 @@ public class Tensor<T> {
 
                 int distance = previous.highestOrderDifference(current);
                 if (distance > 1) {
-
                     builder.append(close.repeat(Math.max(distance - 1, 0)))
                             .append(delineatorSurroundedByWhitespace ? " " : "")
-                            .append(repeatedDelineator ? delineator.trim().repeat(Math.max(distance - 1, 0)) : delineator)
+                            .append(repeatedDelineator ? normalisedDelineator.repeat(Math.max(distance - 1, 0)) : delineator)
                             .append(delineatorSurroundedByWhitespace ? " " : "")
                             .append(open.repeat(Math.max(distance - 1, 0)));
                 }
@@ -594,12 +695,14 @@ public class Tensor<T> {
                 .toString();
     }
 
+    public String toFormattedString() {
+        return toString("", "", "\t", "\n", ".", true);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Tensor<?> tensor = (Tensor<?>) o;
-
+        if (!(o instanceof Tensor<?> tensor)) return false;
         return map == tensor.map || (map.equals(tensor.map));
     }
 
@@ -607,4 +710,33 @@ public class Tensor<T> {
     public int hashCode() {
         return map.hashCode();
     }
+
+    public static <T> TensorBuilder<T> builder() {
+        return new TensorBuilder<>();
+    }
+
+    public static class TensorBuilder<T> {
+        private final Tensor<T> tensor;
+
+        public TensorBuilder() {
+            tensor = Tensor.empty();
+        }
+
+        public TensorBuilder<T> add(Index index, T element) {
+            tensor.set(element, index);
+            return this;
+        }
+
+        public TensorBuilder<T> add(Map<Index, T> map) {
+            tensor.map.putAll(map);
+            return this;
+        }
+
+        public Tensor<T> build() {
+            return tensor;
+        }
+    }
+
+
+
 }

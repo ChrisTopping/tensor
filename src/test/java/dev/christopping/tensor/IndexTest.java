@@ -206,6 +206,46 @@ class IndexTest {
 
     }
 
+    @Nested
+    @DisplayName("fill()")
+    class Fill {
+
+        @Test
+        @DisplayName("Given order is 0: should return empty index")
+        void givenOrderIs0_ShouldReturnEmptyIndex() {
+            Index result = Index.fill(0, 100);
+            assertThat(result).isEqualTo(Index.of());
+        }
+
+        @Test
+        @DisplayName("Given order is greater than 1: should return the filled index of the given order and index value")
+        void givenOrderIsGreaterThan1_ShouldReturnTheFilledIndexOfTheGivenOrderAndIndexValue() {
+            Index result = Index.fill(5, 100);
+            assertThat(result).isEqualTo(Index.of(100,100,100,100,100));
+        }
+
+    }
+
+    @Nested
+    @DisplayName("zeros()")
+    class Zeros {
+
+        @Test
+        @DisplayName("Given order is 0: should return empty index")
+        void givenOrderIs0_ShouldReturnEmptyIndex() {
+            Index result = Index.zeros(0);
+            assertThat(result).isEqualTo(Index.of());
+        }
+
+        @Test
+        @DisplayName("Given order is greater than 0: should return the filled zero-index of the given oder")
+        void givenOrderIsGreaterThan0_ShouldReturnTheFilledZero_indexOfTheGivenOder() {
+            Index result = Index.zeros(5);
+            assertThat(result).isEqualTo(Index.of(0,0,0,0,0));
+        }
+
+    }
+
     @DisplayName("hasCoordinate(int dimension, long coordinate")
     @Nested
     class hasCoordinate {
@@ -415,6 +455,167 @@ class IndexTest {
 
     }
 
+    @Nested
+    @DisplayName("isWithinBounds(Index min, Index max)")
+    class IsWithinBoundsMinAndMax {
+
+        @Test
+        @DisplayName("Given null minimum: should throw NullPointerException")
+        void givenNullMinimum_ShouldThrowNullPointerException() {
+            Index index = Index.of(1, 2, 3);
+            assertThatThrownBy(() -> index.isWithinBounds(null, Index.of(1,2,3))).isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("Given null maximum: should throw NullPointerException")
+        void givenNullMaximum_ShouldThrowNullPointerException() {
+            Index index = Index.of(1, 2, 3);
+            assertThatThrownBy(() -> index.isWithinBounds(Index.of(1,2,3), null)).isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("Given minimum is a lower order: should return false")
+        void givenMinimumIsALowerOrder_ShouldThrowIllegalArgumentException() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2), Index.of(1, 2, 3));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given minimum is a higher order: should throw should return false")
+        void givenMinimumIsAHigherOrder_ShouldThrowIllegalArgumentException() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2, 3, 4), Index.of(1, 2, 3));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given maximum is a lower order: should throw should return false")
+        void givenMaximumIsALowerOrder_ShouldThrowIllegalArgumentException() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2, 3), Index.of(1, 2));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given maximum is a higher order: should throw should return false")
+        void givenMaximumIsAHigherOrder_ShouldThrowIllegalArgumentException() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2, 3), Index.of(1, 2, 3, 4));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given both arguments are equal to original: should return true")
+        void givenBothArgumentsAreEqualToOriginal_ShouldReturnTrue() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2, 3), Index.of(1, 2, 3));
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given both arguments are strictly larger than original: should return false")
+        void givenBothArgumentsAreStrictlyLargerThanOriginal_ShouldReturnTrue() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(2, 3, 4), Index.of(10, 20, 30));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given both arguments are strictly smaller than original: should return false")
+        void givenBothArgumentsAreStrictlySmallerThanOriginal_ShouldReturnFalse() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(0, 1, 2), Index.of(0, 1, 2));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given min is stricly smaller and max is strictly larger than original: should return true")
+        void givenMinIsStriclySmallerAndMaxIsStrictlyLargerThanOriginal_ShouldReturnTrue() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(0, 1, 2), Index.of(2, 3, 4));
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given min is strictly no larger and max is strictly no smaller: should return true")
+        void givenMinIsStrictlyNoLargerAndMaxIsStrictlyNoSmaller_ShouldReturnTrue() {
+            Index index = Index.of(10, 20, 30);
+            boolean result = index.isWithinBounds(Index.of(10, 19, 30), Index.of(10, 21, 30));
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given max has some smaller coordinates: should return false")
+        void givenMaxHasSomeSmallerCoordinatesShouldReturnFalse() {
+            Index index = Index.of(10, 20, 30, 40);
+            boolean result = index.isWithinBounds(Index.of(0, 0, 0, 0), Index.of(100, 100, 29, 100));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given min has some larger coordinates: should return false")
+        void givenMinHasSomeLargerCoordinates_ShouldReturnFalse() {
+            Index index = Index.of(10, 20, 30, 40);
+            boolean result = index.isWithinBounds(Index.of(0, 0, 31, 0), Index.of(100, 100, 100, 100));
+            assertThat(result).isFalse();
+        }
+
+    }
+
+    @Nested
+    @DisplayName("isWithinBounds(Index max)")
+    class IsWithinBoundsMax {
+
+        @Test
+        @DisplayName("Given null maximum: should throw NullPointerException")
+        void givenNullMaximum_ShouldThrowNullPointerException() {
+            Index index = Index.of(1, 2, 3);
+            assertThatThrownBy(() -> index.isWithinBounds(null)).isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        @DisplayName("Given maximum is a lower order: should throw should return false")
+        void givenMaximumIsALowerOrder_ShouldThrowIllegalArgumentException() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given maximum is a higher order: should throw should return false")
+        void givenMaximumIsAHigherOrder_ShouldThrowIllegalArgumentException() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2, 3, 4));
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given maximum is equal to original: should return true")
+        void givenMaximumIsEqualToOriginal_ShouldReturnTrue() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(1, 2, 3));
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given maximum is strictly larger than original: should return true")
+        void givenMaximumIsStrictlyLargerThanOriginal_ShouldReturnTrue() {
+            Index index = Index.of(1, 2, 3);
+            boolean result = index.isWithinBounds(Index.of(2, 3, 4));
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given maximum has some smaller coordinates: should return false")
+        void givenMaximumHasSomeSmallerCoordinates_ShouldReturnFalse() {
+            Index index = Index.of(10, 20, 30, 40);
+            boolean result = index.isWithinBounds(Index.of(100, 100, 29, 100));
+            assertThat(result).isFalse();
+        }
+
+    }
+
     @DisplayName("isEmpty()")
     @Nested
     class IsEmpty {
@@ -555,9 +756,9 @@ class IndexTest {
 
     }
 
-    @DisplayName("combine(Index other)")
+    @DisplayName("concatenate(Index other)")
     @Nested
-    class Combine {
+    class Concatenate {
 
         @DisplayName("Given both indices are empty - should return empty index")
         @Test
@@ -581,6 +782,72 @@ class IndexTest {
         @Test
         void givenPrimaryIndexAndParameterIndexAreNotEmpty_shouldReturnIndexWithParameterCoordinatesAppendedToPrimaryCoordinates() {
             assertThat(Index.of(1, 2, 3).concatenate(Index.of(4, 5, 6))).isEqualTo(Index.of(1, 2, 3, 4, 5, 6));
+        }
+
+    }
+
+    @Nested
+    @DisplayName("add()")
+    class Add {
+
+        @Test
+        @DisplayName("Given other index is null: should throw InvalidArgumentException")
+        void givenOtherIndexIsNull_ShouldThrowInvalidArgumentException() {
+            assertThatThrownBy(() -> Index.of(1,2,3).add(null)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("Given index orders do not match: should throw InvalidArgumentException")
+        void givenIndexOrdersDoNotMatch_ShouldThrowInvalidArgumentException() {
+            assertThatThrownBy(() -> Index.of(1,2,3).add(Index.of(1,2))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("Given both indices are empty: should return empty index")
+        void givenBothIndicesAreEmpty_ShouldReturnEmptyIndex() {
+            assertThat(Index.of().add(Index.of())).isEqualTo(Index.of());
+        }
+        
+        @Test
+        @DisplayName("Given both indices are non-empty: return a new index with summed coordinates")
+        void givenBothIndicesAreNon_empty_ReturnANewIndexWithSummedCoordinates() {
+            assertThat(Index.of(1,2,3).add(Index.of(10,20,30))).isEqualTo(Index.of(11,22,33));
+        }
+
+    }
+
+    @Nested
+    @DisplayName("subtract()")
+    class Subtract {
+
+        @Test
+        @DisplayName("Given other index is null: should throw InvalidArgumentException")
+        void givenOtherIndexIsNull_ShouldThrowInvalidArgumentException() {
+            assertThatThrownBy(() -> Index.of(1,2,3).subtract(null)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("Given index orders do not match: should throw InvalidArgumentException")
+        void givenIndexOrdersDoNotMatch_ShouldThrowInvalidArgumentException() {
+            assertThatThrownBy(() -> Index.of(1,2,3).subtract(Index.of(1,2))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("Given both indices are empty: should return empty index")
+        void givenBothIndicesAreEmpty_ShouldReturnEmptyIndex() {
+            assertThat(Index.of().subtract(Index.of())).isEqualTo(Index.of());
+        }
+
+        @Test
+        @DisplayName("Given one of other coordinates larger: should throw IndexOutOfBoundsException")
+        void givenOneOfOtherCoordinatesLarger_ShouldThrowIndexOutOfBoundsException() {
+            assertThatThrownBy(() -> Index.of(1,2,3).subtract(Index.of(10,20,30))).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given both indices are non-empty: return a new index with summed coordinates")
+        void givenBothIndicesAreNon_empty_ReturnANewIndexWithSummedCoordinates() {
+            assertThat(Index.of(11,22,33).subtract(Index.of(10,20,30))).isEqualTo(Index.of(1,2,3));
         }
 
     }
@@ -976,6 +1243,40 @@ class IndexTest {
         void givenTensorHasSomeNon_zeroValues_ShouldReturnFalse() {
             Index index = Index.of(0, 0, 0, 1, 0);
             assertThat(index.isZeroTensor()).isFalse();
+        }
+
+    }
+
+    @Nested
+    @DisplayName("isIdentityIndex()")
+    class IsIdentityIndex {
+
+        @Test
+        @DisplayName("Given empty index: should return true")
+        void givenEmptyIndex_ShouldReturnTrue() {
+            Index index = Index.of();
+            assertThat(index.isIdentityIndex()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given single valued index: should return true")
+        void givenSingleValuedIndex_ShouldReturnTrue() {
+            Index index = Index.of(2);
+            assertThat(index.isIdentityIndex()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given some elements are not same: should return false")
+        void givenNon_identityIndex_ShouldReturnFalse() {
+            Index index = Index.of(2,2,0);
+            assertThat(index.isIdentityIndex()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given all elements are same: should return true")
+        void givenAllElementsAreSame_ShouldReturnTrue() {
+            Index index = Index.of(2,2,2);
+            assertThat(index.isIdentityIndex()).isTrue();
         }
 
     }

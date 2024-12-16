@@ -1,8 +1,8 @@
 package dev.christopping.tensor;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public class Scalar<T> extends Tensor<T> {
@@ -22,8 +22,18 @@ public class Scalar<T> extends Tensor<T> {
     }
 
     @Override
+    public <S> Scalar<S> expect(Class<S> type) {
+        return super.expect(type).toScalar();
+    }
+
+    @Override
+    public Scalar<T> backfill(T element) {
+        return new Scalar<>(map);
+    }
+
+    @Override
     public Scalar<T> transpose() {
-        return super.transpose().toScalar();
+        return new Scalar<T>(map);
     }
 
     @Override
@@ -37,13 +47,28 @@ public class Scalar<T> extends Tensor<T> {
     }
 
     @Override
+    public Scalar<T> reduce(T identity, BinaryOperator<T> accumulator, int dimension) {
+        return super.reduce(identity, accumulator, dimension).toScalar();
+    }
+
+    @Override
+    public <S> Scalar<S> reduce(S identity, BiFunction<S, T, S> accumulator, BinaryOperator<S> combiner, int dimension) {
+        return super.reduce(identity, accumulator, combiner, dimension).toScalar();
+    }
+
+    @Override
+    public Scalar<T> mask(Tensor<Boolean> mask, T maskedValue) {
+        return super.mask(mask, maskedValue).toScalar();
+    }
+
+    @Override
     public <S, U> Scalar<S> piecewise(BiFunction<T, U, S> piecewiseFunction, Tensor<U> other) {
         return super.piecewise(piecewiseFunction, other).toScalar();
     }
 
     @Override
-    public <S> Scalar<S> expect(Class<S> type) {
-        return super.expect(type).toScalar();
+    public Scalar<T> slice(Map<Integer, Long> constraints) {
+        return super.slice(constraints).toScalar();
     }
 
     @Override
@@ -52,13 +77,8 @@ public class Scalar<T> extends Tensor<T> {
     }
 
     @Override
-    public Vector<T> toVector() {
-        return Vector.of(List.of(get()));
-    }
-
-    @Override
-    public Matrix<T> toMatrix() {
-        return Matrix.of(List.of(List.of(get())));
+    public Scalar<T> extract(Index min, Index max) {
+        return super.extract(min, max).toScalar();
     }
 
     @Override
