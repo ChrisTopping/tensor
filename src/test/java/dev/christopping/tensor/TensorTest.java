@@ -1,18 +1,22 @@
 package dev.christopping.tensor;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static dev.christopping.tensor.TensorAssertions.assertTensor;
+import static dev.christopping.tensor.TensorAssertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TensorTest {
 
+    private static final Integer[] INT_ARRAY_1D = {1, 2, 3, 4};
     private static final Integer[][] INT_ARRAY_2D = {{1, 2}, {3, 4}, {5, 6}};
     private static final Integer[][][] INT_ARRAY_3D = {{{1, 2}, {3, 4}, {5, 6}}, {{10, 20}, {30, 40}, {50, 60}}};
 
@@ -46,7 +50,7 @@ class TensorTest {
         void givenSingleValuedList_shouldReturnScalar() {
             Tensor<String> tensor = Tensor.of(List.of("abc"), String.class);
             assertThat(tensor.order()).isEqualTo(0);
-            assertTensor(tensor, "abc");
+            assertScalar(tensor, "abc");
         }
 
         @DisplayName("Given list of values - should return vector")
@@ -54,7 +58,7 @@ class TensorTest {
         void givenListOfValues_shouldReturnVector() {
             Tensor<String> tensor = Tensor.of(List.of("abc", "def"), String.class);
             assertThat(tensor.order()).isEqualTo(1);
-            assertTensor(tensor, "abc def");
+            assertVector(tensor, "[abc,def]");
         }
 
         @DisplayName("Given order 2 nested list - should return matrix")
@@ -62,7 +66,7 @@ class TensorTest {
         void givenOrder2NestedList_shouldReturnMatrix() {
             Tensor<String> tensor = Tensor.of(List.of(List.of("abc", "def"), List.of("ghi", "jkl")), String.class);
             assertThat(tensor.order()).isEqualTo(2);
-            assertTensor(tensor, "abc def | ghi jkl");
+            assertMatrix(tensor, "[[abc,def][ghi,jkl]]");
         }
 
         @DisplayName("Given order 3 nested list - should return 3-tensor")
@@ -70,7 +74,7 @@ class TensorTest {
         void givenOrder3NestedList_shouldReturn3Tensor() {
             Tensor<String> tensor = Tensor.of(List.of(List.of(List.of("abc", "def"), List.of("ghi", "jkl")), List.of(List.of("mno", "pqr"), List.of("stu", "vwx"))), String.class);
             assertThat(tensor.order()).isEqualTo(3);
-            assertTensor(tensor, "abc def | ghi jkl || mno pqr | stu vwx");
+            assertTensor(tensor, "[[[abc,def][ghi,jkl]][[mno,pqr][stu,vwx]]]");
         }
 
         @DisplayName("Given superclass - should return superclass typed tensor")
@@ -78,7 +82,7 @@ class TensorTest {
         void givenSuperclassType_shouldReturnSuperclassTypedTensor() {
             Tensor<Object> tensor = Tensor.of(List.of("abc", "def"), Object.class);
             assertThat(tensor.order()).isEqualTo(1);
-            assertTensor(tensor, "abc def");
+            assertVector(tensor, "[abc,def]");
         }
 
     }
@@ -98,7 +102,7 @@ class TensorTest {
         void givenSingleValuedArray_shouldReturnScalar() {
             Tensor<String> tensor = Tensor.of(new Object[]{"abc"}, String.class);
             assertThat(tensor.order()).isEqualTo(0);
-            assertTensor(tensor, "abc");
+            assertScalar(tensor, "abc");
         }
 
         @DisplayName("Given array of values - should return vector")
@@ -106,24 +110,24 @@ class TensorTest {
         void givenArrayOfValues_shouldReturnVector() {
             Tensor<String> tensor = Tensor.of(new Object[]{"abc", "def"}, String.class);
             assertThat(tensor.order()).isEqualTo(1);
-            assertTensor(tensor, "abc def");
+            assertVector(tensor, "[abc,def]");
         }
 
         @DisplayName("Given order 2 nested array - should return matrix")
         @Test
         void givenOrder2NestedArray_shouldReturnMatrix() {
-            Tensor<String> tensor = Tensor.of(new Object[][]{{"abc", "def"},{"ghi", "jkl"}}, String.class);
+            Tensor<String> tensor = Tensor.of(new Object[][]{{"abc", "def"}, {"ghi", "jkl"}}, String.class);
             assertThat(tensor.order()).isEqualTo(2);
-            assertTensor(tensor, "abc def | ghi jkl");
+            assertMatrix(tensor, "[[abc,def][ghi,jkl]]");
         }
 
         @DisplayName("Given order 3 nested array - should return 3-tensor")
         @Test
         void givenOrder3NestedArray_shouldReturn3Tensor() {
 
-            Tensor<String> tensor = Tensor.of(new Object[][][]{{{"abc", "def"},{"ghi", "jkl"}},{{"mno", "pqr"},{"stu", "vwx"}}}, String.class);
+            Tensor<String> tensor = Tensor.of(new Object[][][]{{{"abc", "def"}, {"ghi", "jkl"}}, {{"mno", "pqr"}, {"stu", "vwx"}}}, String.class);
             assertThat(tensor.order()).isEqualTo(3);
-            assertTensor(tensor, "abc def | ghi jkl || mno pqr | stu vwx");
+            assertTensor(tensor, "[[[abc,def][ghi,jkl]][[mno,pqr][stu,vwx]]]");
         }
 
         @DisplayName("Given superclass - should return superclass typed tensor")
@@ -131,7 +135,7 @@ class TensorTest {
         void givenSuperclassType_shouldReturnSuperclassTypedTensor() {
             Tensor<Object> tensor = Tensor.of(new Object[]{"abc", "def"}, Object.class);
             assertThat(tensor.order()).isEqualTo(1);
-            assertTensor(tensor, "abc def");
+            assertVector(tensor, "[abc,def]");
         }
 
     }
@@ -152,7 +156,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", Index.of(2L));
             assertThat(tensor.order()).isEqualTo(1);
             assertThat(tensor.dimensions()).containsExactly(3L);
-            assertTensor(tensor, "123 123 123");
+            assertVector(tensor, "[123,123,123]");
         }
 
         @DisplayName("Given 2 varargs - should return tensor with matrix value")
@@ -161,7 +165,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", Index.of(2L, 2L));
             assertThat(tensor.order()).isEqualTo(2);
             assertThat(tensor.dimensions()).containsExactly(3L, 3L);
-            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123");
+            assertMatrix(tensor, "[[123,123,123][123,123,123][123,123,123]]");
         }
 
         @DisplayName("Given 3 varargs - should return tensor with 3D value")
@@ -170,7 +174,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", Index.of(2L, 2L, 1L));
             assertThat(tensor.order()).isEqualTo(3);
             assertThat(tensor.dimensions()).containsExactly(3L, 3L, 2L);
-            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123 || 123 123 123 | 123 123 123 | 123 123 123");
+            assertTensor(tensor, "[[[123,123,123][123,123,123][123,123,123]][[123,123,123][123,123,123][123,123,123]]]");
         }
 
     }
@@ -196,8 +200,9 @@ class TensorTest {
 
         @DisplayName("Given 0-valued vararg - should throw error")
         @Test
-        void given0ValuedVararg_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 0L)).isInstanceOf(IndexOutOfBoundsException.class);
+        void given0ValuedVararg_shouldReturnAScalar() {
+            Tensor<String> result = Tensor.fill("123", 0L);
+            assertVector(result, "123");
         }
 
         @DisplayName("Given 1 vararg - should return tensor with vector value")
@@ -206,7 +211,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", 3L);
             assertThat(tensor.order()).isEqualTo(1);
             assertThat(tensor.dimensions()).containsExactly(3L);
-            assertTensor(tensor, "123 123 123");
+            assertVector(tensor, "[123,123,123]");
         }
 
         @DisplayName("Given 2 varargs - should return tensor with matrix value")
@@ -215,7 +220,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", 3L, 3L);
             assertThat(tensor.order()).isEqualTo(2);
             assertThat(tensor.dimensions()).containsExactly(3L, 3L);
-            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123");
+            assertMatrix(tensor, "[[123,123,123][123,123,123][123,123,123]]");
         }
 
         @DisplayName("Given 3 varargs - should return tensor with 3D value")
@@ -224,7 +229,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", 3L, 3L, 2L);
             assertThat(tensor.order()).isEqualTo(3);
             assertThat(tensor.dimensions()).containsExactly(3L, 3L, 2L);
-            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123 || 123 123 123 | 123 123 123 | 123 123 123");
+            assertTensor(tensor, "[[[123,123,123][123,123,123][123,123,123]][[123,123,123][123,123,123][123,123,123]]]");
         }
 
     }
@@ -241,8 +246,9 @@ class TensorTest {
 
         @DisplayName("Given 0-valued vararg - should throw error")
         @Test
-        void given0ValuedVararg_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 0)).isInstanceOf(IndexOutOfBoundsException.class);
+        void given0ValuedVararg_shouldReturnAScalar() {
+            Tensor<String> result = Tensor.fill("123", 0);
+            assertVector(result, "123");
         }
 
         @DisplayName("Given 1 vararg - should return tensor with vector value")
@@ -251,7 +257,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", 3);
             assertThat(tensor.order()).isEqualTo(1);
             assertThat(tensor.dimensions()).containsExactly(3L);
-            assertTensor(tensor, "123 123 123");
+            assertVector(tensor, "[123,123,123]");
         }
 
         @DisplayName("Given 2 varargs - should return tensor with matrix value")
@@ -260,7 +266,7 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", 3, 3);
             assertThat(tensor.order()).isEqualTo(2);
             assertThat(tensor.dimensions()).containsExactly(3L, 3L);
-            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123");
+            assertMatrix(tensor, "[[123,123,123][123,123,123][123,123,123]]");
         }
 
         @DisplayName("Given 3 varargs - should return tensor with 3D value")
@@ -269,7 +275,55 @@ class TensorTest {
             Tensor<String> tensor = Tensor.fill("123", 3, 3, 2);
             assertThat(tensor.order()).isEqualTo(3);
             assertThat(tensor.dimensions()).containsExactly(3L, 3L, 2L);
-            assertTensor(tensor, "123 123 123 | 123 123 123 | 123 123 123 || 123 123 123 | 123 123 123 | 123 123 123");
+            assertTensor(tensor, "[[[123,123,123][123,123,123][123,123,123]][[123,123,123][123,123,123][123,123,123]]]");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("identity()")
+    class Identity {
+
+        @Test
+        @DisplayName("Given empty shape: should return identity scalar")
+        void givenEmptyShape_ShouldReturnIdentityScalar() {
+            Scalar<Integer> result = Tensor.identity(Index.of()).toScalar();
+            assertScalar(result, "1");
+        }
+
+        @Test
+        @DisplayName("Given vector shape: should return identity vector")
+        void givenVectorShape_ShouldReturnIdentityVector() {
+            Vector<Integer> result = Tensor.identity(Index.of(3)).toVector();
+            assertVector(result, "[1,1,1,1]");
+        }
+
+        @Test
+        @DisplayName("Given square matrix shape: should return identity matrix")
+        void givenMatrixShape_ShouldReturnIdentityMatrix() {
+            Matrix<Integer> result = Tensor.identity(Index.of(3, 3)).toMatrix();
+            assertMatrix(result, "[[1,0,0,0][0,1,0,0][0,0,1,0][0,0,0,1]]");
+        }
+
+        @Test
+        @DisplayName("Given non-square matrix shape: should return identity matrix")
+        void givenNon_squareMatrixShape_ShouldReturnIdentityMatrix() {
+            Matrix<Integer> result = Tensor.identity(Index.of(3, 4)).toMatrix();
+            assertMatrix(result, "[[1,0,0,0][0,1,0,0][0,0,1,0][0,0,0,1][0,0,0,0]]");
+        }
+
+        @Test
+        @DisplayName("Given cubic order 3 tensor: should return identity tensor")
+        void givenCubicOrder3Tensor_ShouldReturnIdentityTensor() {
+            Tensor<Integer> result = Tensor.identity(Index.of(2, 2, 2));
+            assertTensor(result, "[[[1,0,0][0,0,0][0,0,0]][[0,0,0][0,1,0][0,0,0]][[0,0,0][0,0,0][0,0,1]]]");
+        }
+
+        @Test
+        @DisplayName("Given non-cubic order 3 tensor: should return identity tensor")
+        void givenNonCubicOrder3Tensor_ShouldReturnIdentityTensor() {
+            Tensor<Integer> result = Tensor.identity(Index.of(2, 2, 3));
+            assertTensor(result, "[[[1,0,0][0,0,0][0,0,0]][[0,0,0][0,1,0][0,0,0]][[0,0,0][0,0,0][0,0,1]][[0,0,0][0,0,0][0,0,0]]]");
         }
 
     }
@@ -288,21 +342,21 @@ class TensorTest {
         @Test
         void given1Dimension_shouldReturnScalar() {
             Tensor<String> tensor = Tensor.generate(Index::toString, Index.of(2));
-            assertTensor(tensor, "(0) (1) (2)");
+            assertVector(tensor, "[(0),(1),(2)]");
         }
 
         @DisplayName("Given 2 dimensions - should return matrix")
         @Test
         void given2Dimensions_shouldReturnMatrix() {
             Tensor<String> tensor = Tensor.generate(Index::toString, Index.of(1, 1));
-            assertTensor(tensor, "(0, 0) (1, 0) | (0, 1) (1, 1)");
+            assertMatrix(tensor, "[[(0, 0),(1, 0)][(0, 1),(1, 1)]]");
         }
 
         @DisplayName("Given 3 dimensions - should return 3-tensor")
         @Test
         void given3Dimensions_shouldReturn3Tensor() {
             Tensor<String> tensor = Tensor.generate(Index::toString, Index.of(1, 1, 1));
-            assertTensor(tensor, "(0, 0, 0) (1, 0, 0) | (0, 1, 0) (1, 1, 0) || (0, 0, 1) (1, 0, 1) | (0, 1, 1) (1, 1, 1)");
+            assertTensor(tensor, "[[[(0, 0, 0),(1, 0, 0)][(0, 1, 0),(1, 1, 0)]][[(0, 0, 1),(1, 0, 1)][(0, 1, 1),(1, 1, 1)]]]");
         }
 
     }
@@ -322,28 +376,28 @@ class TensorTest {
         void givenEmptyDimensions_shouldReturnScalar() {
             Tensor<Object> tensor = Tensor.generate(index -> "abc");
             assertThat(tensor.isEmpty()).isFalse();
-            assertTensor(tensor, "abc");
+            assertScalar(tensor, "abc");
         }
 
         @DisplayName("Given 1 dimension - should return vector")
         @Test
         void given1Dimension_shouldReturnVector() {
             Tensor<String> tensor = Tensor.generate(Index::toString, 3L);
-            assertTensor(tensor, "(0) (1) (2)");
+            assertVector(tensor, "[(0),(1),(2)]");
         }
 
         @DisplayName("Given 2 dimensions - should return matrix")
         @Test
         void given2Dimensions_shouldReturnMatrix() {
             Tensor<String> tensor = Tensor.generate(Index::toString, 2L, 2L);
-            assertTensor(tensor, "(0, 0) (1, 0) | (0, 1) (1, 1)");
+            assertMatrix(tensor, "[[(0, 0),(1, 0)][(0, 1),(1, 1)]]");
         }
 
         @DisplayName("Given 3 dimensions - should return 3-tensor")
         @Test
         void given3Dimensions_shouldReturn3Tensor() {
             Tensor<String> tensor = Tensor.generate(Index::toString, 2L, 2L, 2L);
-            assertTensor(tensor, "(0, 0, 0) (1, 0, 0) | (0, 1, 0) (1, 1, 0) || (0, 0, 1) (1, 0, 1) | (0, 1, 1) (1, 1, 1)");
+            assertTensor(tensor, "[[[(0, 0, 0),(1, 0, 0)][(0, 1, 0),(1, 1, 0)]][[(0, 0, 1),(1, 0, 1)][(0, 1, 1),(1, 1, 1)]]]");
         }
 
     }
@@ -362,21 +416,21 @@ class TensorTest {
         @Test
         void given1Dimension_shouldReturnScalar() {
             Tensor<String> tensor = Tensor.generate(Index::toString, 3);
-            assertTensor(tensor, "(0) (1) (2)");
+            assertVector(tensor, "[(0),(1),(2)]");
         }
 
         @DisplayName("Given 2 dimensions - should return matrix")
         @Test
         void given2Dimensions_shouldReturnMatrix() {
             Tensor<String> tensor = Tensor.generate(Index::toString, 2, 2);
-            assertTensor(tensor, "(0, 0) (1, 0) | (0, 1) (1, 1)");
+            assertMatrix(tensor, "[[(0, 0),(1, 0)][(0, 1),(1, 1)]]");
         }
 
         @DisplayName("Given 3 dimensions - should return 3-tensor")
         @Test
         void given3Dimensions_shouldReturn3Tensor() {
             Tensor<String> tensor = Tensor.generate(Index::toString, 2, 2, 2);
-            assertTensor(tensor, "(0, 0, 0) (1, 0, 0) | (0, 1, 0) (1, 1, 0) || (0, 0, 1) (1, 0, 1) | (0, 1, 1) (1, 1, 1)");
+            assertTensor(tensor, "[[[(0, 0, 0),(1, 0, 0)][(0, 1, 0),(1, 1, 0)]][[(0, 0, 1),(1, 0, 1)][(0, 1, 1),(1, 1, 1)]]]");
         }
 
     }
@@ -405,7 +459,7 @@ class TensorTest {
         void givenTwoTensors_shouldCreateTensorOfHigherOrderContainingBothSlices() {
             Tensor<Integer> tensor1 = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
             Tensor<Integer> tensor2 = Tensor.of(new Integer[][]{{5, 6}, {7, 8}}, Integer.class);
-            assertTensor(Tensor.combine(List.of(tensor1, tensor2)), "1 2 | 3 4 || 5 6 | 7 8");
+            assertTensor(Tensor.combine(List.of(tensor1, tensor2)), "[[[1,2][3,4]][[5,6][7,8]]]");
         }
 
         @DisplayName("Given three tensors - should create tensor of higher order containing all slices")
@@ -414,7 +468,7 @@ class TensorTest {
             Tensor<Integer> tensor1 = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
             Tensor<Integer> tensor2 = Tensor.of(new Integer[][]{{5, 6}, {7, 8}}, Integer.class);
             Tensor<Integer> tensor3 = Tensor.of(new Integer[][]{{9, 10}, {11, 12}}, Integer.class);
-            assertTensor(Tensor.combine(List.of(tensor1, tensor2, tensor3)), "1 2 | 3 4 || 5 6 | 7 8 || 9 10 | 11 12");
+            assertTensor(Tensor.combine(List.of(tensor1, tensor2, tensor3)), "[[[1,2][3,4]][[5,6][7,8]][[9,10][11,12]]]");
         }
 
     }
@@ -443,7 +497,7 @@ class TensorTest {
         void givenTwoTensors_shouldCreateTensorOfHigherOrderContainingBothSlices() {
             Tensor<Integer> tensor1 = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
             Tensor<Integer> tensor2 = Tensor.of(new Integer[][]{{5, 6}, {7, 8}}, Integer.class);
-            assertTensor(Tensor.combine(new Tensor[]{tensor1, tensor2}), "1 2 | 3 4 || 5 6 | 7 8");
+            assertTensor(Tensor.combine(new Tensor[]{tensor1, tensor2}), "[[[1,2][3,4]][[5,6][7,8]]]");
         }
 
         @DisplayName("Given three tensors - should create tensor of higher order containing all slices")
@@ -452,7 +506,7 @@ class TensorTest {
             Tensor<Integer> tensor1 = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
             Tensor<Integer> tensor2 = Tensor.of(new Integer[][]{{5, 6}, {7, 8}}, Integer.class);
             Tensor<Integer> tensor3 = Tensor.of(new Integer[][]{{9, 10}, {11, 12}}, Integer.class);
-            assertTensor(Tensor.combine(new Tensor[]{tensor1, tensor2, tensor3}), "1 2 | 3 4 || 5 6 | 7 8 || 9 10 | 11 12");
+            assertTensor(Tensor.combine(new Tensor[]{tensor1, tensor2, tensor3}), "[[[1,2][3,4]][[5,6][7,8]][[9,10][11,12]]]");
         }
 
     }
@@ -461,11 +515,11 @@ class TensorTest {
     @Nested
     class GetByIndex {
 
-        @DisplayName("Given null - return null")
+        @DisplayName("Given mapping does not exist - should throw exception")
         @Test
-        void givenNull_doSomething() {
+        void givenMappingDoesNotExist_shouldReturnNull() {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
-            assertThat(tensor.get()).isNull();
+            assertThat(tensor.get(Index.of(2, 0))).isNull();
         }
 
         @DisplayName("Given mapping exists - should return value")
@@ -481,11 +535,31 @@ class TensorTest {
             assertThat(tensor.get(Index.of(1, 2))).isEqualTo(6);
         }
 
-        @DisplayName("Given mapping does not exist - should throw exception")
+    }
+
+    @Nested
+    @DisplayName("getOrDefault(Index index)")
+    class GetOrDefaultByIndex {
+
         @Test
-        void givenMappingDoesNotExist_shouldReturnNull() {
+        @DisplayName("Given mapping does not exist: should return default")
+        void givenMappingDoesNotExist_ShouldReturnDefault() {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
-            assertThat(tensor.get(Index.of(2, 0))).isNull();
+            Integer result = tensor.getOrDefault(1000, Index.of());
+            assertThat(result).isEqualTo(1000);
+        }
+
+        @DisplayName("Given mapping exists - should return value")
+        @Test
+        void givenMappingExists_shouldReturnValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.getOrDefault(1000, Index.of(0, 0))).isEqualTo(1);
+            assertThat(tensor.getOrDefault(1000, Index.of(1, 0))).isEqualTo(2);
+            assertThat(tensor.getOrDefault(1000, Index.of(0, 1))).isEqualTo(3);
+            assertThat(tensor.getOrDefault(1000, Index.of(1, 1))).isEqualTo(4);
+            assertThat(tensor.getOrDefault(1000, Index.of(0, 2))).isEqualTo(5);
+            assertThat(tensor.getOrDefault(1000, Index.of(1, 2))).isEqualTo(6);
         }
 
     }
@@ -516,6 +590,33 @@ class TensorTest {
 
     }
 
+    @Nested
+    @DisplayName("getOrDefault(long... coordinates)")
+    class GetOrDefaultByLongVarargs {
+
+        @Test
+        @DisplayName("Given mapping does not exist: should return default")
+        void givenMappingDoesNotExist_ShouldReturnDefault() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            Integer result = tensor.getOrDefault(1000, 10L, 10L);
+            assertThat(result).isEqualTo(1000);
+        }
+
+        @DisplayName("Given mapping exists - should return value")
+        @Test
+        void givenMappingExists_shouldReturnValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.getOrDefault(1000, 0L, 0L)).isEqualTo(1);
+            assertThat(tensor.getOrDefault(1000, 1L, 0L)).isEqualTo(2);
+            assertThat(tensor.getOrDefault(1000, 0L, 1L)).isEqualTo(3);
+            assertThat(tensor.getOrDefault(1000, 1L, 1L)).isEqualTo(4);
+            assertThat(tensor.getOrDefault(1000, 0L, 2L)).isEqualTo(5);
+            assertThat(tensor.getOrDefault(1000, 1L, 2L)).isEqualTo(6);
+        }
+
+    }
+
     @DisplayName("get(int... coordinates)")
     @Nested
     class GetByIntVarargs {
@@ -538,6 +639,33 @@ class TensorTest {
         void givenMappingDoesNotExist_shouldReturnNull() {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
             assertThat(tensor.get(2, 0)).isNull();
+        }
+
+    }
+
+    @Nested
+    @DisplayName("getOrDefault(int... coordinates)")
+    class GetOrDefaultByIntVarargs {
+
+        @Test
+        @DisplayName("Given mapping does not exist: should return default")
+        void givenMappingDoesNotExist_ShouldReturnDefault() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            Integer result = tensor.getOrDefault(1000, 10, 10);
+            assertThat(result).isEqualTo(1000);
+        }
+
+        @DisplayName("Given mapping exists - should return value")
+        @Test
+        void givenMappingExists_shouldReturnValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.getOrDefault(1000, 0, 0)).isEqualTo(1);
+            assertThat(tensor.getOrDefault(1000, 1, 0)).isEqualTo(2);
+            assertThat(tensor.getOrDefault(1000, 0, 1)).isEqualTo(3);
+            assertThat(tensor.getOrDefault(1000, 1, 1)).isEqualTo(4);
+            assertThat(tensor.getOrDefault(1000, 0, 2)).isEqualTo(5);
+            assertThat(tensor.getOrDefault(1000, 1, 2)).isEqualTo(6);
         }
 
     }
@@ -584,6 +712,48 @@ class TensorTest {
 
     }
 
+    @Nested
+    @DisplayName("setIfAbsent(T element, Index index)")
+    class SetIfAbsentByIndex {
+
+        @DisplayName("Given order of coordinates less than order of tensor - should throw error")
+        @Test
+        void givenOrderOfCoordinatesLessThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.of(new Integer[]{1}, Integer.class).setIfAbsent(1, Index.of(1, 2))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given order of coordinates greater than order of tensor")
+        @Test
+        void givenOrderOfCoordinatesGreaterThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.of(INT_ARRAY_3D, Integer.class).setIfAbsent(1, Index.of(1, 2, 3, 4))).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given unmapped coordinates - should set new value")
+        @Test
+        void givenUnmappedCoordinates_shouldSetNewValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.get(2L, 0L)).isNull();
+
+            tensor.setIfAbsent(100, Index.of(2, 0));
+
+            assertThat(tensor.get(2L, 0L)).isEqualTo(100);
+        }
+
+        @DisplayName("Given mapped coordinates - should not replace value")
+        @Test
+        void givenMappedCoordinates_shouldReplaceValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(2);
+
+            tensor.setIfAbsent(100, Index.of(1, 0));
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(2);
+        }
+
+    }
+
     @DisplayName("set(T value, long... coordinates)")
     @Nested
     class SetByLongVarargs {
@@ -626,6 +796,48 @@ class TensorTest {
 
     }
 
+    @DisplayName("setIfAbsent(T value, long... coordinates)")
+    @Nested
+    class SetIfAbsentByLongVarargs {
+
+        @DisplayName("Given order of coordinates less than order of tensor - should throw error")
+        @Test
+        void givenOrderOfCoordinatesLessThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.of(INT_ARRAY_3D, Integer.class).setIfAbsent(1, 1L, 2L)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given order of coordinates greater than order of tensor")
+        @Test
+        void givenOrderOfCoordinatesGreaterThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.of(INT_ARRAY_3D, Integer.class).setIfAbsent(1, 1L, 2L, 3L, 4L)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given unmapped coordinates - should set new value")
+        @Test
+        void givenUnmappedCoordinates_shouldSetNewValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.get(2L, 0L)).isNull();
+
+            tensor.setIfAbsent(100, 2L, 0L);
+
+            assertThat(tensor.get(2L, 0L)).isEqualTo(100);
+        }
+
+        @DisplayName("Given mapped coordinates - should not replace value")
+        @Test
+        void givenMappedCoordinates_shouldNotReplaceValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(2);
+
+            tensor.setIfAbsent(100, 1L, 0L);
+
+            assertThat(tensor.get(1L, 0L)).isEqualTo(2);
+        }
+
+    }
+
     @DisplayName("set(T value, int... coordinates)")
     @Nested
     class SetByIntVarargs {
@@ -664,6 +876,78 @@ class TensorTest {
             tensor.set(100, 1, 0);
 
             assertThat(tensor.get(1, 0)).isEqualTo(100);
+        }
+
+    }
+
+    @DisplayName("setIfAbsent(T value, int... coordinates)")
+    @Nested
+    class SetIfAbsentByIntVarargs {
+
+        @DisplayName("Given order of coordinates less than order of tensor - should throw error")
+        @Test
+        void givenOrderOfCoordinatesLessThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.of(INT_ARRAY_3D, Integer.class).setIfAbsent(1, 1, 2)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given order of coordinates greater than order of tensor")
+        @Test
+        void givenOrderOfCoordinatesGreaterThanOrderOfTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.of(INT_ARRAY_3D, Integer.class).setIfAbsent(1, 1, 2, 3, 4)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @DisplayName("Given unmapped coordinates - should set new value")
+        @Test
+        void givenUnmappedCoordinates_shouldSetNewValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.get(2, 0)).isNull();
+
+            tensor.setIfAbsent(100, 2, 0);
+
+            assertThat(tensor.get(2, 0)).isEqualTo(100);
+        }
+
+        @DisplayName("Given mapped coordinates - should not replace value")
+        @Test
+        void givenMappedCoordinates_shouldNotReplaceValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+
+            assertThat(tensor.get(1, 0)).isEqualTo(2);
+
+            tensor.setIfAbsent(100, 1, 0);
+
+            assertThat(tensor.get(1, 0)).isEqualTo(2);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("remove()")
+    class Remove {
+
+        @Test
+        @DisplayName("Given tensor is empty: should have not affect")
+        void givenTensorIsEmpty_ShouldHaveNotAffect() {
+            Tensor<Object> tensor = Tensor.empty();
+            tensor.remove(Index.of());
+            assertThat(tensor.isEmpty()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given tensor does not contain element at index: should have no affect")
+        void givenTensorDoesNotContainElementAtIndex_ShouldHaveNoAffect() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            tensor.remove(Index.of(1, 3));
+            assertMatrix(tensor, "[[1,2][3,4][5,6]]");
+        }
+
+        @Test
+        @DisplayName("Given tensor contains element at index: should remove the element")
+        void givenTensorContainsElementAtIndex_ShouldRemoveTheElement() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            tensor.remove(Index.of(1, 2));
+            assertMatrix(tensor, "[[1,2][3,4][5, ]]");
         }
 
     }
@@ -743,6 +1027,175 @@ class TensorTest {
 
     }
 
+    @Nested
+    @DisplayName("indices()")
+    class Indices {
+
+        @Test
+        @DisplayName("Given empty tensor: should return empty list")
+        void givenEmptyTensor_ShouldReturnEmptyList() {
+            List<Index> result = Tensor.empty().indices();
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Given scalar: should return empty list")
+        void givenScalar_ShouldReturnEmptyList() {
+            Tensor<Object> tensor = Tensor.empty();
+            tensor.set(1, Index.of());
+            List<Index> result = tensor.indices();
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Given vector: should return all coordinates in vector")
+        void givenVector_ShouldReturnAllCoordinatesInVector() {
+            List<Index> result = Tensor.of(INT_ARRAY_1D, Integer.class).indices();
+            assertThat(result).containsOnly(
+                    Index.of(0),
+                    Index.of(1),
+                    Index.of(2),
+                    Index.of(3)
+            );
+        }
+
+        @Test
+        @DisplayName("Given matrix: should return all coordinates in matrix")
+        void givenMatrix_ShouldReturnAllCoordinatesInMatrix() {
+            List<Index> result = Tensor.of(INT_ARRAY_2D, Integer.class).indices();
+            assertThat(result).containsOnly(
+                    Index.of(0, 0),
+                    Index.of(0, 1),
+                    Index.of(1, 0),
+                    Index.of(1, 1),
+                    Index.of(0, 2),
+                    Index.of(1, 2)
+            );
+        }
+
+        @Test
+        @DisplayName("Given order 3 tensor: should return all coordinates in tensor")
+        void givenOrder3Tensor_ShouldReturnAllCoordinatesInTensor() {
+            List<Index> result = Tensor.of(INT_ARRAY_3D, Integer.class).indices();
+            assertThat(result).containsOnly(
+                    Index.of(0, 0, 0),
+                    Index.of(0, 0, 1),
+                    Index.of(0, 1, 0),
+                    Index.of(0, 1, 1),
+                    Index.of(1, 0, 0),
+                    Index.of(0, 2, 0),
+                    Index.of(0, 2, 1),
+                    Index.of(1, 0, 1),
+                    Index.of(1, 1, 0),
+                    Index.of(1, 1, 1),
+                    Index.of(1, 2, 0),
+                    Index.of(1, 2, 1)
+            );
+        }
+
+        @Test
+        @DisplayName("Given sparse matrix: should return all coordinates in tensor")
+        void givenSparseMatrix_ShouldReturnAllCoordinatesInTensor() {
+            Tensor<Integer> tensor = Tensor.empty();
+            tensor.set(1, Index.of(2, 1));
+            List<Index> result = tensor.indices();
+            assertThat(result).containsOnly(
+                    Index.of(0, 0),
+                    Index.of(0, 1),
+                    Index.of(1, 0),
+                    Index.of(1, 1),
+                    Index.of(2, 0),
+                    Index.of(2, 1)
+            );
+        }
+
+    }
+
+    @Nested
+    @DisplayName("contains()")
+    class Contains {
+
+        @Test
+        @DisplayName("Given empty tensor and null value: should return false")
+        void givenEmptyTensorAndNullValue_ShouldReturnFalse() {
+            Tensor<Object> tensor = Tensor.empty();
+            assertThat(tensor.contains(null)).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given tensor does not contain value: should return false")
+        void givenTensorDoesNotContainValue_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThat(tensor.contains(100)).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given tensor contains value: should return true")
+        void givenTensorContainsValue_ShouldReturnTrue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThat(tensor.contains(1)).isTrue();
+        }
+
+    }
+
+    @Nested
+    @DisplayName("elements()")
+    class Elements {
+
+        @Test
+        @DisplayName("Given empty tensor: should return empty list")
+        void givenEmptyTensor_ShouldReturnEmptyList() {
+            assertThat(Tensor.empty().elements()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Given non-sparse tensor: should return list of ordered elements")
+        void givenNonSparseTensor_ShouldReturnListOfOrderedElements() {
+            assertThat(Tensor.of(INT_ARRAY_3D, Integer.class).elements()).containsExactly(1, 2, 3, 4, 5, 6, 10, 20, 30, 40, 50, 60);
+        }
+
+        @Test
+        @DisplayName("Given sparse tensor: should return list of ordered elements")
+        void givenSparseTensor_ShouldReturnListOfOrderedElements() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            tensor.remove(Index.of(0, 1, 0));
+            tensor.remove(Index.of(1, 0, 1));
+            assertThat(tensor.elements()).containsExactly(1, 2, 4, 5, 6, 10, 30, 40, 50, 60);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("flatten()")
+    class Flatten {
+
+        @Test
+        @DisplayName("Given empty tensor: should return empty list")
+        void givenEmptyTensor_ShouldReturnEmptyList() {
+            Vector<Object> result = Tensor.empty().flatten(100);
+            assertThat(result.isEmpty()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given non-sparse tensor: should return vector with ordered elements")
+        void givenNon_sparseTensor_ShouldReturnVectorWithOrderedElements() {
+            Vector<Integer> result = Tensor.of(INT_ARRAY_3D, Integer.class).flatten(100);
+            assertVector(result, "[1,2,3,4,5,6,10,20,30,40,50,60]");
+
+        }
+
+        @Test
+        @DisplayName("Given sparse tensor: should return vector with ordered elements backfilled with default element")
+        void givenSparseTensor_ShouldReturnVectorWithOrderedElementsBackfilledWithDefaultElement() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            tensor.remove(Index.of(0, 1, 0));
+            tensor.remove(Index.of(1, 0, 1));
+            Vector<Integer> result = tensor.flatten(100);
+            assertVector(result, "[1,2,100,4,5,6,10,100,30,40,50,60]");
+        }
+
+    }
+
     @DisplayName("transpose()")
     @Nested
     class Transpose {
@@ -765,7 +1218,7 @@ class TensorTest {
         @Test
         void givenMultipleValues_shouldReturnTransposedTensor() {
             Tensor<Integer> transposed = Tensor.of(INT_ARRAY_2D, Integer.class).transpose();
-            assertTensor(transposed, "1 3 5 | 2 4 6");
+            assertMatrix(transposed, "[[1,3,5][2,4,6]]");
         }
 
     }
@@ -788,8 +1241,7 @@ class TensorTest {
         void givenHorizontalVector_shouldBackfillValues() {
             Tensor<Object> tensor = Tensor.empty();
             tensor.set(100, 2, 0);
-            tensor.backfill("X");
-            assertTensor(tensor, "X X 100");
+            assertTensor(tensor.backfill("X"), "[X,X,100]");
         }
 
         @DisplayName("Given vertical vector - should backfill values")
@@ -797,8 +1249,7 @@ class TensorTest {
         void givenVerticalVector_shouldBackfillValues() {
             Tensor<Object> tensor = Tensor.empty();
             tensor.set(100, 0, 2);
-            tensor.backfill("X");
-            assertTensor(tensor, "X | X | 100");
+            assertMatrix(tensor.backfill("X"), "[[X][X][100]]");
         }
 
         @DisplayName("Given matrix - should backfill values")
@@ -806,8 +1257,7 @@ class TensorTest {
         void givenMatrix_shouldBackfillValues() {
             Tensor<Object> tensor = Tensor.empty();
             tensor.set(100, 1, 1);
-            tensor.backfill("X");
-            assertTensor(tensor, "X X | X 100");
+            assertMatrix(tensor.backfill("X"), "[[X,X][X,100]]");
         }
 
         @DisplayName("Given 3D tensor - should backfill values")
@@ -815,8 +1265,7 @@ class TensorTest {
         void given3DTensor_shouldBackfillValues() {
             Tensor<Object> tensor = Tensor.empty();
             tensor.set(100, 1, 1, 1);
-            tensor.backfill("X");
-            assertTensor(tensor, "X X | X X || X X | X 100");
+            assertTensor(tensor.backfill("X"), "[[[X,X][X,X]][[X,X][X,100]]]");
         }
 
     }
@@ -840,7 +1289,7 @@ class TensorTest {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
             Tensor<Integer> computed = tensor.compute(integer -> -integer);
 
-            assertTensor(computed, "-1 -2 | -3 -4 | -5 -6");
+            assertMatrix(computed, "[[-1,-2][-3,-4][-5,-6]]");
         }
 
     }
@@ -867,7 +1316,7 @@ class TensorTest {
             String[][] negativeIntArray = {{"001", "102"}, {"013", "114"}, {"025", "126"}};
             assertThat(computed).isEqualTo(Tensor.of(negativeIntArray, String.class));
 
-            assertTensor(computed, "001 102 | 013 114 | 025 126");
+            assertMatrix(computed, "[[001,102][013,114][025,126]]");
         }
 
     }
@@ -903,9 +1352,159 @@ class TensorTest {
                     );
 
             Tensor<Integer> computed = tensor.computeAndUpdateIndices(computeFunction);
-            computed.backfill(0);
 
-            assertTensor(computed, "4 0 8 | 0 0 0 | 12 0 16 | 0 0 0 | 20 0 24");
+            assertMatrix(computed.backfill(0), "[[4,0,8][0,0,0][12,0,16][0,0,0][20,0,24]]");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("reduce(T identity, BinaryOperator<T> accumulator, int dimension)")
+    class ReduceWithAccumulator {
+
+        @Test
+        @DisplayName("Given empty tensor with 0 dimension argument: should throw IndexOutOfBoundsException")
+        void givenEmptyTensorWith0DimensionArgument_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.empty();
+            assertThatThrownBy(() -> tensor.reduce(0, Integer::sum, 0)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given vector with non-0 dimension argument: should throw IndexOutOfBoundsException")
+        void givenVectorWithNon_0DimensionArgument_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            assertThatThrownBy(() -> tensor.reduce(123, Integer::sum, 1)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given vector with 0 dimension argument: should apply accumulator across all elements along given dimension")
+        void givenVectorWith0DimensionArgument_ShouldApplyAccumulatorAcrossAllElementsAlongGivenDimension() {
+            Tensor<Integer> result = Tensor.of(INT_ARRAY_1D, Integer.class).reduce(123, Integer::sum, 0);
+            assertScalar(result, "133");
+        }
+
+        @Test
+        @DisplayName("Given matrix with dimension argument greater or equal to 2: should throw IndexOutOfBoundsException")
+        void givenMatrixWithDimensionArgumentGreaterOrEqualTo2_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThatThrownBy(() -> tensor.reduce(123, Integer::sum, 2)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given matrix with dimension argument less than 2: should apply accumulator across all elements along given dimension")
+        void givenMatrixWithDimensionArgumentLessThan2_ShouldApplyAccumulatorAcrossAllElementsAlongGivenDimension() {
+            Tensor<Integer> result = Tensor.of(INT_ARRAY_2D, Integer.class).reduce(123, Integer::sum, 1);
+            assertVector(result, "[132,135]");
+        }
+
+        @Test
+        @DisplayName("Given order-3 tensor with dimension argument greater or equal to 3: should throw IndexOutOfBoundsException")
+        void givenOrder_3TensorWithDimensionArgumentGreaterOrEqualTo3_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            assertThatThrownBy(() -> tensor.reduce(123, Integer::sum, 3)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given order-3 tensor with dimension argument less than 3: should apply accumulator across all elements along given dimension")
+        void givenOrder_3TensorWithDimensionArgumentLessThan3_ShouldApplyAccumulatorAcrossAllElementsAlongGivenDimension() {
+            Tensor<Integer> result = Tensor.of(INT_ARRAY_3D, Integer.class).reduce(123, Integer::sum, 2);
+            assertMatrix(result, "[[134,145][156,167][178,189]]");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("reduce(S identity, BiFunction<S, T, S> accumulator, BinaryOperator<S> combiner, int dimension)")
+    class ReduceWithAccumulatorAndCombiner {
+
+        @Test
+        @DisplayName("Given empty tensor with 0-dimension argument: should throw IndexOutOfBoundsException")
+        void givenEmptyTensorWith0_dimensionArgument_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.empty();
+            assertThatThrownBy(() -> tensor.reduce("identity", (first, second) -> first + "" + second, (s, s2) -> s + s2, 0)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given vector with non-0-dimension argument: should throw IndexOutOfBoundsException")
+        void givenVectorWithNon_0_dimensionArgument_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            assertThatThrownBy(() -> tensor.reduce("identity", (first, second) -> first + "" + second, (s, s2) -> s + "join" + s2, 1)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given vector with 0 dimension argument: should apply accumulator across all elements along given dimension")
+        void givenVectorWith0DimensionArgument_ShouldApplyAccumulatorAcrossAllElementsAlongGivenDimension() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            Tensor<String> result = tensor.reduce("I", (first, second) -> first + "A" + second, (s, s2) -> s + "C" + s2, 0);
+            assertScalar(result, "IA1A2A3A4");
+        }
+
+        @Test
+        @DisplayName("Given matrix with dimension argument greater or equal to 2: should throw IndexOutOfBoundsException")
+        void givenMatrixWithDimensionArgumentGreaterOrEqualTo2_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThatThrownBy(() -> tensor.reduce("identity", (first, second) -> first + "" + second, (s, s2) -> s + "join" + s2, 2)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given matrix with dimension argument less than 2: should apply accumulator across all elements along given dimension")
+        void givenMatrixWithDimensionArgumentLessThan2_ShouldApplyAccumulatorAcrossAllElementsAlongGivenDimension() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            Tensor<String> result = tensor.reduce("I", (first, second) -> first + "A" + second, (s, s2) -> s + "C" + s2, 1);
+            assertVector(result, "[IA1A3A5,IA2A4A6]");
+        }
+
+        @Test
+        @DisplayName("Given order-3 tensor with dimension argument greater or equal to 3: should throw IndexOutOfBoundsException")
+        void givenOrder_3TensorWithDimensionArgumentGreaterOrEqualTo3_ShouldThrowIndexOutOfBoundsException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            assertThatThrownBy(() -> tensor.reduce("identity", (first, second) -> first + "" + second, (s, s2) -> s + "join" + s2, 3)).isInstanceOf(IndexOutOfBoundsException.class);
+        }
+
+        @Test
+        @DisplayName("Given order-3 tensor with dimension argument less than 3: should apply accumulator across all elements along given dimension")
+        void givenOrder_3TensorWithDimensionArgumentLessThan3_ShouldApplyAccumulatorAcrossAllElementsAlongGivenDimension() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            Tensor<String> result = tensor.reduce("I", (first, second) -> first + "A" + second, (s, s2) -> s + "C" + s2, 2);
+            assertMatrix(result, "[[IA1A10,IA2A20][IA3A30,IA4A40][IA5A50,IA6A60]]");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("mask()")
+    class Mask {
+
+        @Test
+        @DisplayName("Given mask is null: should throw IllegalArgumentException")
+        void givenMaskIsNull_ShouldThrowIllegalArgumentException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            assertThatThrownBy(() -> tensor.mask(null, 0)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("Given mask has different order: should throw IllegalArgumentException")
+        void givenMaskHasDifferentOrder_ShouldThrowIllegalArgumentException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            Tensor<Boolean> mask = Tensor.of(new Boolean[][]{{true, false}, {true, false}}, Boolean.class);
+            assertThatThrownBy(() -> tensor.mask(mask, 0)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("Given mask has different dimensions: should throw IllegalArgumentException")
+        void givenMaskHasDifferentDimensions_ShouldThrowIllegalArgumentException() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            Tensor<Boolean> mask = Tensor.of(new Boolean[]{true, true, false}, Boolean.class);
+            assertThatThrownBy(() -> tensor.mask(mask, 0)).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("Given mask has correct dimensions: should set masked values where mask is true")
+        void givenMaskHasCorrectDimensions_ShouldMaskWhereMaskIsTrue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            Tensor<Boolean> mask = Tensor.of(new Boolean[]{true, false, false, true}, Boolean.class);
+            Tensor<Integer> result = tensor.mask(mask, 0);
+            assertVector(result, "[1,0,0,4]");
         }
 
     }
@@ -949,7 +1548,7 @@ class TensorTest {
         void givenOrdersAndSizesMatch_shouldPerformPiecewiseOperation() {
             Tensor<Integer> first = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
             Tensor<Integer> second = Tensor.of(new Integer[][]{{10, 20}, {30, 40}}, Integer.class);
-            assertTensor(first.piecewise((a, b) -> a * b, second), "10 40 | 90 160");
+            assertMatrix(first.piecewise((a, b) -> a * b, second), "[[10,40][90,160]]");
         }
 
     }
@@ -1002,11 +1601,11 @@ class TensorTest {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
             Tensor<Integer> slice = tensor.slice(Map.of(2, 0L));
             assertThat(slice.order()).isEqualTo(2);
-            assertTensor(slice, "1 2 | 3 4 | 5 6");
+            assertMatrix(slice, "[[1,2][3,4][5,6]]");
 
             Tensor<Integer> slice2 = tensor.slice(Map.of(2, 1L));
             assertThat(slice2.order()).isEqualTo(2);
-            assertTensor(slice2, "10 20 | 30 40 | 50 60");
+            assertMatrix(slice2, "[[10,20][30,40][50,60]]");
         }
 
         @DisplayName("Given 2 constraints on a 3D tensor - should return correct 1D tensor")
@@ -1015,11 +1614,11 @@ class TensorTest {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
             Tensor<Integer> slice = tensor.slice(Map.of(0, 1L, 1, 0L));
             assertThat(slice.order()).isEqualTo(1);
-            assertTensor(slice, "2 20");
+            assertVector(slice, "[2,20]");
 
             Tensor<Integer> slice2 = tensor.slice(Map.of(1, 1L, 2, 0L));
             assertThat(slice2.order()).isEqualTo(1);
-            assertTensor(slice2, "3 4");
+            assertVector(slice2, "[3,4]");
         }
 
     }
@@ -1069,100 +1668,157 @@ class TensorTest {
         void givenScalar_shouldReturnExtrudedVectorOfGivenSize() {
             Tensor<Object> tensor = Tensor.empty();
             tensor.set("abc");
-            assertTensor(tensor.extrude(3), "abc abc abc");
+            assertVector(tensor.extrude(3), "[abc,abc,abc]");
         }
 
         @DisplayName("Given vector - should return extruded matrix of given size")
         @Test
         void givenVector_shouldReturnExtrudedMatrixOfGivenSize() {
             Tensor<String> tensor = Tensor.of(new String[]{"abc", "def", "ghi"}, String.class);
-            assertTensor(tensor.extrude(3), "abc def ghi | abc def ghi | abc def ghi");
+            assertMatrix(tensor.extrude(3), "[[abc,def,ghi][abc,def,ghi][abc,def,ghi]]");
         }
 
         @DisplayName("Given matrix - should return extruded 3-tensor of given size")
         @Test
         void givenMatrix_shouldReturnExtruded3TensorOfGivenSize() {
             Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
-            assertTensor(tensor.extrude(2), "1 2 | 3 4 | 5 6 || 1 2 | 3 4 | 5 6");
+            assertTensor(tensor.extrude(2), "[[[1,2][3,4][5,6]][[1,2][3,4][5,6]]]");
         }
 
     }
 
-    @DisplayName("toMatrix()")
+    @DisplayName("extract(Index min, Index max)")
     @Nested
-    class ToMatrix {
+    class Extract {
 
-        @DisplayName("Given empty tensor - should throw error")
         @Test
-        void givenEmptyTensor_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.empty().toMatrix()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given empty tensor - should return empty tensor")
+        void givenEmptyTensor_shouldReturnEmptyTensor() {
+            Tensor<Object> tensor = Tensor.empty();
+            Tensor<Object> extracted = tensor.extract(Index.of(), Index.of());
+            assertThat(extracted).isEqualTo(Tensor.empty());
         }
 
-        @DisplayName("Given scalar - should throw error")
         @Test
-        void givenScalar_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123").toMatrix()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given min and max indices mismatch in dimensions - should throw exception")
+        void givenMinAndMaxDimensionMismatch_shouldThrowException() {
+            Tensor<Integer> tensor = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
+            assertThatThrownBy(() -> tensor.extract(Index.of(0), Index.of(0, 1)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Min and max must have the same number of dimensions.");
         }
 
-        @DisplayName("Given vector - should throw error")
         @Test
-        void givenVector_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 2).toMatrix()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given min index exceeds max index - should throw exception")
+        void givenMinExceedsMax_shouldThrowException() {
+            Tensor<Integer> tensor = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
+            assertThatThrownBy(() -> tensor.extract(Index.of(1, 1), Index.of(0, 0)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Min must be bounded by max");
         }
 
-        @DisplayName("Given matrix - should return matrix")
         @Test
-        void givenMatrix_shouldReturnMatrix() {
-            Matrix<String> matrix = Tensor.fill("123", 2, 2).toMatrix();
-            assertThat(matrix).isInstanceOf(Matrix.class);
-            assertThat(matrix.order()).isEqualTo(2);
-            assertThat(matrix).hasToString("[[123,123][123,123]]");
+        @DisplayName("Given min and max indices - should return sub-tensor within bounds")
+        void givenValidIndices_shouldReturnSubTensorWithinBounds() {
+            Tensor<Integer> tensor = Tensor.of(new Integer[][]{{1, 2, 3}, {4, 5, 6}}, Integer.class);
+            Tensor<Integer> extracted = tensor.extract(Index.of(0, 1), Index.of(1, 2));
 
+            assertThat(extracted.order()).isEqualTo(2);
+            assertThat(extracted.dimensions()).containsExactly(2L, 1L);
+            assertThat(extracted.get(0, 0)).isEqualTo(4);
+            assertThat(extracted.get(1, 0)).isEqualTo(5);
         }
 
-        @DisplayName("Given 3D tensor - should throw error")
         @Test
-        void given3DTensor_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toMatrix()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given min and max indices for 3D tensor - should return correct sub-tensor")
+        void givenValidIndicesFor3DTensor_shouldReturnCorrectSubTensor() {
+            Tensor<Integer> tensor = Tensor.of(new Integer[][][]{{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}}, Integer.class);
+            Tensor<Integer> extracted = tensor.extract(Index.of(0, 0, 0), Index.of(1, 1, 0));
+
+            assertThat(extracted.order()).isEqualTo(3);
+            assertThat(extracted.dimensions()).containsExactly(2L, 2L, 1L);
+            assertThat(extracted.get(0, 0, 0)).isEqualTo(1);
+            assertThat(extracted.get(0, 1, 0)).isEqualTo(3);
+            assertThat(extracted.get(1, 0, 0)).isEqualTo(2);
+            assertThat(extracted.get(1, 1, 0)).isEqualTo(4);
         }
 
+        @Test
+        @DisplayName("Given min and max indices matching entire tensor - should return identical tensor")
+        void givenIndicesMatchingEntireTensor_shouldReturnIdenticalTensor() {
+            Tensor<Integer> tensor = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
+            Tensor<Integer> extracted = tensor.extract(Index.of(0, 0), Index.of(1, 1));
+
+            assertThat(extracted).isEqualTo(tensor);
+        }
+
+        @Test
+        @DisplayName("Given sparse tensor - should correctly extract sub-tensor")
+        void givenSparseTensor_shouldCorrectlyExtractSubTensor() {
+            Tensor<Integer> tensor = Tensor.empty();
+            tensor.set(1, 0, 0);
+            tensor.set(2, 0, 1);
+            tensor.set(3, 1, 0);
+            tensor.set(4, 1, 1);
+
+            Tensor<Integer> extracted = tensor.extract(Index.of(0, 0), Index.of(1, 1));
+
+            assertThat(extracted.order()).isEqualTo(2);
+            assertThat(extracted.dimensions()).containsExactly(2L, 2L);
+            assertThat(extracted.get(0, 0)).isEqualTo(1);
+            assertThat(extracted.get(0, 1)).isEqualTo(2);
+            assertThat(extracted.get(1, 0)).isEqualTo(3);
+            assertThat(extracted.get(1, 1)).isEqualTo(4);
+        }
+
+        @Test
+        @DisplayName("Given no overlap between min and max indices and tensor - should return empty tensor")
+        void givenNoOverlap_shouldReturnEmptyTensor() {
+            Tensor<Integer> tensor = Tensor.of(new Integer[][]{{1, 2}, {3, 4}}, Integer.class);
+            Tensor<Integer> extracted = tensor.extract(Index.of(2, 2), Index.of(3, 3));
+
+            assertThat(extracted).isEqualTo(Tensor.empty());
+        }
     }
 
-    @DisplayName("toVector()")
     @Nested
-    class ToVector {
+    @DisplayName("isScalar()")
+    class IsScalar {
 
-        @DisplayName("Given empty tensor - should throw error")
         @Test
-        void givenEmptyTensor_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.empty().toVector()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given empty: should return true")
+        void givenEmpty_ShouldReturnTrue() {
+            Tensor<Object> tensor = Tensor.empty();
+            assertThat(tensor.isScalar()).isTrue();
         }
 
-        @DisplayName("Given scalar - should throw error")
         @Test
-        void givenScalar_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123").toVector()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given scalar: should return true")
+        void givenScalar_ShouldReturnTrue() {
+            Tensor<Integer> tensor = Tensor.empty();
+            tensor.set(1, Index.of());
+            assertThat(tensor.isScalar()).isTrue();
         }
 
-        @DisplayName("Given vector - should return vector")
         @Test
-        void givenVector_shouldReturnVector() {
-            Vector<String> vector = Tensor.fill("123", 2).toVector();
-            assertThat(vector).isInstanceOf(Vector.class);
-            assertThat(vector.order()).isEqualTo(1);
-            assertThat(vector).hasToString("[123,123]");
+        @DisplayName("Given vector: should return false")
+        void givenVector_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            assertThat(tensor.isScalar()).isFalse();
         }
 
-        @DisplayName("Given matrix - should throw error")
         @Test
-        void givenMatrix_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 2, 2).toVector()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given matrix: should return false")
+        void givenMatrix_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThat(tensor.isScalar()).isFalse();
         }
 
-        @DisplayName("Given 3D tensor - should throw error")
         @Test
-        void given3DTensor_shouldThrowError() {
-            assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toVector()).isInstanceOf(IllegalStateException.class);
+        @DisplayName("Given higher order tensor: should return false")
+        void givenHigherOrderTensor_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            assertThat(tensor.isScalar()).isFalse();
         }
 
     }
@@ -1205,6 +1861,202 @@ class TensorTest {
         @Test
         void given3DTensor_shouldThrowError() {
             assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toScalar()).isInstanceOf(IllegalStateException.class);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("isVector()")
+    class IsVector {
+
+        @Test
+        @DisplayName("Given empty: should return false")
+        void givenEmpty_ShouldReturnFalse() {
+            Tensor<Object> tensor = Tensor.empty();
+            assertThat(tensor.isVector()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given scalar: should return false")
+        void givenScalar_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.empty();
+            tensor.set(1, Index.of());
+            assertThat(tensor.isVector()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given vector: should return true")
+        void givenVector_ShouldReturnTrue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            assertThat(tensor.isVector()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given matrix: should return false")
+        void givenMatrix_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThat(tensor.isVector()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given higher order tensor: should return false")
+        void givenHigherOrderTensor_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            assertThat(tensor.isVector()).isFalse();
+        }
+
+    }
+
+    @DisplayName("toVector()")
+    @Nested
+    class ToVector {
+
+        @DisplayName("Given empty tensor - should throw error")
+        @Test
+        void givenEmptyTensor_shouldThrowError() {
+            Vector<Object> scalar = Tensor.empty().toVector();
+            assertThat(scalar).isInstanceOf(Vector.class);
+            assertThat(scalar.order()).isEqualTo(0);
+            assertScalar(scalar, "");
+        }
+
+        @DisplayName("Given scalar - should throw error")
+        @Test
+        void givenScalar_shouldReturnVectorOfOrder0() {
+            Vector<String> scalar = Tensor.fill("123").toVector();
+            assertThat(scalar).isInstanceOf(Vector.class);
+            assertThat(scalar.order()).isEqualTo(1);
+            assertVector(scalar, "123");
+        }
+
+        @DisplayName("Given vector - should return vector")
+        @Test
+        void givenVector_shouldReturnVector() {
+            Vector<String> vector = Tensor.fill("123", 2).toVector();
+            assertThat(vector).isInstanceOf(Vector.class);
+            assertThat(vector.order()).isEqualTo(1);
+            assertThat(vector).hasToString("[123,123]");
+        }
+
+        @DisplayName("Given matrix - should throw error")
+        @Test
+        void givenMatrix_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2).toVector()).isInstanceOf(IllegalStateException.class);
+        }
+
+        @DisplayName("Given 3D tensor - should throw error")
+        @Test
+        void given3DTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toVector()).isInstanceOf(IllegalStateException.class);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("isMatrix()")
+    class IsMatrix {
+
+        @Test
+        @DisplayName("Given empty: should return false")
+        void givenEmpty_ShouldReturnFalse() {
+            Tensor<Object> tensor = Tensor.empty();
+            assertThat(tensor.isMatrix()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given scalar: should return false")
+        void givenScalar_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.empty();
+            tensor.set(1, Index.of());
+            assertThat(tensor.isMatrix()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given vector: should return false")
+        void givenVector_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            assertThat(tensor.isMatrix()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Given matrix: should return true")
+        void givenMatrix_ShouldReturnTrue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThat(tensor.isMatrix()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given higher order tensor: should return false")
+        void givenHigherOrderTensor_ShouldReturnFalse() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            assertThat(tensor.isMatrix()).isFalse();
+        }
+
+    }
+
+    @DisplayName("toMatrix()")
+    @Nested
+    class ToMatrix {
+
+        @DisplayName("Given empty tensor - should throw error")
+        @Test
+        void givenEmptyTensor_shouldReturnMatrix() {
+            Matrix<Object> result = Tensor.empty().toMatrix();
+            assertTensor(result, "");
+        }
+
+        @DisplayName("Given scalar - should throw error")
+        @Test
+        void givenScalar_shouldReturnMatrix() {
+            Matrix<String> result = Tensor.fill("123").toMatrix();
+            assertThat(result.elements()).isEqualTo(Scalar.fill("123", 0, 0).elements());
+        }
+
+        @DisplayName("Given vector - should throw error")
+        @Test
+        void givenVector_shouldReturnMatrix() {
+            Matrix<String> result = Tensor.fill("123", 2).toMatrix();
+            assertThat(result.elements()).isEqualTo(Vector.of(List.of("123", "123")).elements());
+        }
+
+        @DisplayName("Given matrix - should return matrix")
+        @Test
+        void givenMatrix_shouldReturnMatrix() {
+            Matrix<String> matrix = Tensor.fill("123", 2, 2).toMatrix();
+            assertThat(matrix).isInstanceOf(Matrix.class);
+            assertThat(matrix.order()).isEqualTo(2);
+            assertThat(matrix).hasToString("[[123,123][123,123]]");
+
+        }
+
+        @DisplayName("Given 3D tensor - should throw error")
+        @Test
+        void given3DTensor_shouldThrowError() {
+            assertThatThrownBy(() -> Tensor.fill("123", 2, 2, 2).toMatrix()).isInstanceOf(IllegalStateException.class);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("toTensor()")
+    class ToTensor {
+
+        @Test
+        @DisplayName("Should return new tensor")
+        void shouldReturnNewTensorWithSameValue() {
+            Tensor<Integer> tensor = Tensor.of(List.of(1, 2, 3), Integer.class);
+            Tensor<Integer> cast = tensor.toTensor();
+
+            assertThat(tensor == cast).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return same valued tensor")
+        void shouldReturnSameValuedTensor() {
+            Tensor<Integer> tensor = Tensor.of(List.of(1, 2, 3), Integer.class);
+            Tensor<Integer> cast = tensor.toTensor();
+
+            assertThat(tensor).isEqualTo(cast);
         }
 
     }
@@ -1320,6 +2172,60 @@ class TensorTest {
 
     }
 
+    @Nested
+    @DisplayName("toFormattedString()")
+    class ToFormattedString {
+
+        @Test
+        @DisplayName("Given empty tensor: should return empty string")
+        void givenEmptyTensor_ShouldReturnEmptyString() {
+            Tensor<Object> tensor = Tensor.empty();
+            assertThat(tensor.toFormattedString()).isEqualTo("");
+        }
+
+        @Test
+        @DisplayName("Given scalar: should print value")
+        void givenScalar_ShouldPrintValue() {
+            Tensor<Object> tensor = Tensor.empty();
+            tensor.set("value");
+            assertThat(tensor.toFormattedString()).isEqualTo("value");
+        }
+
+        @Test
+        @DisplayName("Given vector: should print value")
+        void givenVector_ShouldPrintValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_1D, Integer.class);
+            assertThat(tensor.toFormattedString()).isEqualTo("1	2	3	4");
+        }
+
+        @Test
+        @DisplayName("Given matrix: should print value")
+        void givenMatrix_ShouldPrintValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_2D, Integer.class);
+            assertThat(tensor.toFormattedString()).isEqualTo("""
+                    1	2
+                    3	4
+                    5	6"""
+            );
+        }
+
+        @Test
+        @DisplayName("Given 3 order tensor: should print value")
+        void given3OrderTensor_ShouldPrintValue() {
+            Tensor<Integer> tensor = Tensor.of(INT_ARRAY_3D, Integer.class);
+            assertThat(tensor.toFormattedString()).isEqualTo("""
+                    1	2
+                    3	4
+                    5	6
+                                        
+                    10	20
+                    30	40
+                    50	60"""
+            );
+        }
+
+    }
+
     @DisplayName("equals(Object o)")
     @Nested
     class Equals {
@@ -1379,6 +2285,83 @@ class TensorTest {
             int hashCode1 = Tensor.of(INT_ARRAY_3D, Integer.class).hashCode();
             int hashCode2 = Tensor.of(INT_ARRAY_3D, Integer.class).hashCode();
             assertThat(hashCode1).isEqualTo(hashCode2);
+
+        }
+
+    }
+
+    @Nested
+    @DisplayName("builder()")
+    class Builder {
+
+        @Test
+        @DisplayName("Should provide builder with empty tensor")
+        void shouldProvideBuilderWithEmptyTensor() {
+            Tensor.TensorBuilder<Object> builder = Tensor.builder();
+            assertThat(builder).isOfAnyClassIn(Tensor.TensorBuilder.class);
+            assertThat(builder.build().isEmpty()).isTrue();
+        }
+
+    }
+
+    @Nested
+    @DisplayName("TensorBuilder")
+    class TensorBuilder {
+
+        @Nested
+        @DisplayName("add(Index index, T element)")
+        class AddElement {
+
+            @Test
+            @DisplayName("Should add each element")
+            void shouldAddEachElement() {
+                Tensor<Object> result = Tensor.builder()
+                        .add(Index.of(0), 0)
+                        .add(Index.of(1), 1)
+                        .build();
+
+                assertVector(result, "[0,1]");
+            }
+
+            @Test
+            @DisplayName("Given same index twice: should overwrite element")
+            void givenSameIndexTwice_ShouldOverwriteElement() {
+                Tensor<Object> result = Tensor.builder()
+                        .add(Index.of(0), 0)
+                        .add(Index.of(0), 1)
+                        .build();
+
+                assertVector(result, "1");
+            }
+
+        }
+
+        @Nested
+        @DisplayName("add(Map<Index, T> map)")
+        class AddMap {
+
+            @Test
+            @DisplayName("Should add each element")
+            void shouldAddEachElement() {
+                Tensor<Object> result = Tensor.builder()
+                        .add(Map.of(Index.of(0), 0, Index.of(1), 1))
+                        .add(Index.of(2), 2)
+                        .build();
+
+                assertVector(result, "[0,1,2]");
+            }
+
+            @Test
+            @DisplayName("Given same index twice: should overwrite element")
+            void givenSameIndexTwice_ShouldOverwriteElement() {
+                Tensor<Object> result = Tensor.builder()
+                        .add(Index.of(0), 100)
+                        .add(Map.of(Index.of(0), 0, Index.of(1), 1))
+                        .add(Index.of(2), 2)
+                        .build();
+
+                assertVector(result, "[0,1,2]");
+            }
 
         }
 
