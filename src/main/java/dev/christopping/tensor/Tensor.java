@@ -317,11 +317,23 @@ public class Tensor<T> {
      * @return the dimensions
      */
     public List<Long> dimensions() {
-        return IntStream.range(0, order())
-                .mapToLong(this::size)
-                .boxed()
-                .collect(Collectors.toList());
+        int order = order();
+        long[] maxDims = new long[order];
+
+        for (Index index : map.keySet()) {
+            for (int d = 0; d < index.order() && d < order; d++) {
+                maxDims[d] = Math.max(maxDims[d], index.get(d));
+            }
+        }
+
+        List<Long> result = new ArrayList<>(order);
+        for (long val : maxDims) {
+            result.add(val + 1);
+        }
+
+        return result;
     }
+
 
     /**
      * Returns a new tensor with generically transposed values.</p>
