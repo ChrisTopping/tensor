@@ -18,7 +18,7 @@ public class ScalarTest {
 
         @Test
         @DisplayName("Given null - should return null valued scalar")
-        void givenNullShouldReturnNullValuedScalaR() {
+        void givenNullShouldReturnNullValuedScalar() {
             Scalar<Object> scalar = Scalar.of(null);
             assertThat(scalar.order()).isEqualTo(0);
             assertThat(scalar.dimensions()).isEmpty();
@@ -120,8 +120,7 @@ public class ScalarTest {
         @DisplayName("Should not mutate scalar")
         void shouldNotMutateScalar() {
             Scalar<Integer> original = Scalar.of(123);
-            Scalar<Integer> backfilled = Scalar.of(123);
-            backfilled.backfill(456);
+            Scalar<Integer> backfilled = original.backfill(456);
 
             assertThat(backfilled).isEqualTo(original);
         }
@@ -186,6 +185,8 @@ public class ScalarTest {
     @DisplayName("computeAndUpdateIndices()")
     class ComputeAndUpdateIndices {
 
+        // TODO : rename
+
         @Test
         @DisplayName("Not sure")
         void notSure() {
@@ -208,6 +209,28 @@ public class ScalarTest {
             Scalar<Integer> second = Scalar.of(2);
             Scalar<Integer> result = first.piecewise(Integer::sum, second);
             assertScalar(result, "3");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("slice()")
+    class Slice {
+
+        @Test
+        @DisplayName("Given empty map: should return same valued scalar")
+        void givenEmptyMap_ShouldReturnSameValuedScalar() {
+            Scalar<Integer> scalar = Scalar.of(1);
+            Scalar<Integer> result = scalar.slice(Map.of());
+            assertScalar(result, "1");
+        }
+
+        @Test
+        @DisplayName("Given non-empty map: should return empty scalar")
+        void givenNonEmptyMap_ShouldReturnEmptyScalar() {
+            Scalar<Integer> scalar = Scalar.of(1);
+            Scalar<Integer> result = scalar.slice(Map.of(0, 0L));
+            assertScalar(result, "");
         }
 
     }
@@ -248,6 +271,19 @@ public class ScalarTest {
     }
 
     @Nested
+    @DisplayName("extract()")
+    class Extract {
+
+        @Test
+        @DisplayName("Should return new scalar with same value")
+        void shouldReturnNewScalarWithSameValue() {
+            Scalar<Integer> scalar = Scalar.of(1);
+            assertScalar(scalar.extract(Index.of(), Index.of()), "1");
+        }
+
+    }
+
+    @Nested
     @DisplayName("toVector()")
     class ToVector {
 
@@ -268,7 +304,7 @@ public class ScalarTest {
         @DisplayName("Should return single-valued matrix")
         void shouldReturnSingle_valuedVector() {
             Scalar<Integer> scalar = Scalar.of(1);
-            assertMatrix(scalar.toMatrix(), "1");
+            assertThat(scalar.toMatrix().elements()).isEqualTo(scalar.elements());
         }
 
     }
