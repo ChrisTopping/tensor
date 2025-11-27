@@ -146,7 +146,7 @@ public class Matrix<T> extends Tensor<T> {
 
     @Override
     public Matrix<T> backfill(T element) {
-        return new Matrix<>(map);
+        return super.backfill(element).toMatrix();
     }
 
     @Override

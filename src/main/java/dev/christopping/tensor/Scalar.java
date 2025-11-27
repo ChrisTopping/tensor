@@ -28,7 +28,7 @@ public class Scalar<T> extends Tensor<T> {
 
     @Override
     public Scalar<T> backfill(T element) {
-        return new Scalar<>(map);
+        return super.backfill(element).toScalar();
     }
 
     @Override
